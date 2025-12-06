@@ -56,16 +56,22 @@ export const adminCreateArticle = async (payload: any, file?: File) => {
 
   // Build FormData
   const form = new FormData();
-  for (const key in payload) {
-    const value = payload[key];
-    if (value !== undefined && value !== null) {
-      if (Array.isArray(value)) {
-        value.forEach((item) => form.append(`${key}[]`, item));
-      } else {
-        form.append(key, value.toString());
+ for (const key in payload) {
+  const value = payload[key];
+  if (value !== undefined && value !== null) {
+    if (key === "author" && typeof value === "object") {
+      // Append each author field individually
+      for (const aKey in value) {
+        form.append(`author[${aKey}]`, value[aKey]);
       }
+    } else if (Array.isArray(value)) {
+      value.forEach((item) => form.append(`${key}[]`, item));
+    } else {
+      form.append(key, value.toString());
     }
   }
+}
+
   if (file) form.append("featuredImage", file);
 
   // Build headers properly

@@ -50,22 +50,34 @@ export default function CreateArticlePage() {
     },
   });
 
-  const handleSubmit = async () => {
-    if (typeof window === "undefined") return;
-    setLoading(true);
-    try {
-      const tagsArray = form.tags
-        ? form.tags.split(",").map((t: string) => t.trim())
-        : [];
-      const payload = { ...form, tags: tagsArray };
-      await adminCreateArticle(payload, file || undefined);
-      router.push("/dashboard/advocacy");
-    } catch (err: any) {
-      alert(err.message || "Failed to create article");
-    } finally {
-      setLoading(false);
-    }
-  };
+ // handleSubmit
+const handleSubmit = async () => {
+  setLoading(true);
+  try {
+    const tagsArray = form.tags
+      ? form.tags.split(",").map((t: string) => t.trim())
+      : [];
+
+    const payload = {
+      title: form.title,
+      excerpt: form.excerpt,
+      content: form.content,
+      category: form.category,
+      tags: tagsArray,
+      slug: form.slug || '',
+      status: form.status,
+      featured: !!form.featured,
+      author: { name: form.partner || "Partner" }, // <-- set as object
+    };
+
+    await adminCreateArticle(payload, file || undefined);
+    router.push("/dashboard/advocacy");
+  } catch (err: any) {
+    alert(err.message || "Failed to create article");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const addImage = () => {
     const url = window.prompt("Enter image URL:");
@@ -113,17 +125,18 @@ export default function CreateArticlePage() {
         </div>
 
         {/* PARTNER */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Partner Name
-          </label>
-          <input
-            placeholder="Partner organization name"
-            value={form.partner}
-            onChange={(e) => setForm({ ...form, partner: e.target.value })}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-          />
-        </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Partner Name
+  </label>
+  <input
+    placeholder="Partner organization name"
+    value={form.partner}  // <-- use form.partner, not form.author.name
+    onChange={(e) => setForm({ ...form, partner: e.target.value })}
+    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+  />
+</div>
+
 
         {/* CATEGORY + TAGS + SLUG */}
         <div className="grid grid-cols-2 gap-4">
@@ -151,7 +164,7 @@ export default function CreateArticlePage() {
             />
           </div>
 
-           <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Slug
             </label>
