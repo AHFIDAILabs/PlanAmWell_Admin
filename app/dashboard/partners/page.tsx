@@ -1,200 +1,176 @@
-// app/admin/partners/page.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { usePartner, Partner } from "../../hooks/usePartner";
-import PartnerForm from "../../components/PartnerForm";
+import { useEffect } from "react";
+import { usePartnerContext } from "../../context/PartnerContext";
+import { useRouter } from "next/navigation";
+import { Building2, Globe, Mail, Phone, MapPin, Plus } from "lucide-react";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Button,
-  Modal,
-  TextField,
-} from "@mui/material"; 
-import Toast, { toast } from "react-hot-toast";
-
-const AdminPartnersPage = () => {
-  const {
-    partners,
-    loading,
-    error,
-    fetchAllPartners,
-    createPartner,
-    updatePartner,
-    deletePartner,
-    togglePartnerStatus,
-  } = usePartner();
-
-  const [openModal, setOpenModal] = useState(false);
-  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    website: "",
-    logo: null as File | null,
-  });
+export default function PartnersPage() {
+  const router = useRouter();
+  const { partners, loading, error, fetchAllPartners } = usePartnerContext();
 
   useEffect(() => {
     fetchAllPartners();
-  }, []);
+  }, [fetchAllPartners]);
 
-  const handleOpenModal = (partner?: Partner) => {
-    if (partner) {
-      setEditingPartner(partner);
-      setFormData({
-        name: partner.name || "",
-        website: partner.website || "",
-        logo: null,
-      });
-    } else {
-      setEditingPartner(null);
-      setFormData({ name: "", website: "", logo: null });
-    }
-    setOpenModal(true);
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+      </div>
+    );
+  }
 
-  const handleCloseModal = () => setOpenModal(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, files } = e.target;
-    if (name === "logo" && files) {
-      setFormData((prev) => ({ ...prev, logo: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSubmit = async () => {
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("website", formData.website);
-    if (formData.logo) data.append("logo", formData.logo);
-
-    try {
-      if (editingPartner) {
-        await updatePartner(editingPartner._id, data);
-        Toast.success("Partner updated successfully");
-      } else {
-        await createPartner(data);
-        Toast.success("Partner created successfully");
-      }
-      fetchAllPartners();
-      handleCloseModal();
-    } catch (err) {
-      Toast.error("Something went wrong");
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this partner?")) return;
-    await deletePartner(id);
-    Toast.success("Partner deleted successfully");
-    fetchAllPartners();
-  };
-
-  const handleToggleStatus = async (id: string) => {
-    await togglePartnerStatus(id);
-    Toast.success("Partner status updated");
-    fetchAllPartners();
-  };
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          Error: {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Admin - Partners</h1>
-      <Button variant="contained" color="primary" onClick={() => handleOpenModal()}>
-        Add New Partner
-      </Button>
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Partners</h1>
+          <p className="text-gray-600 text-sm mt-1">
+            Manage all your partners and collaborations
+          </p>
+        </div>
+        <button
+          onClick={() => router.push("/dashboard/partners/create")}
+          className="flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition"
+        >
+          <Plus size={18} />
+          Add New Partner
+        </button>
+      </div>
 
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <Table style={{ marginTop: "20px" }}>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Website</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
+      {/* Partners Grid */}
+      {partners.length === 0 ? (
+        <div className="text-center py-12">
+          <Building2 size={48} className="mx-auto text-gray-300 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">
+            No Partners Found
+          </h3>
+          <p className="text-gray-500 mb-4">
+            Get started by adding your first partner
+          </p>
+          <button
+            onClick={() => router.push("/dashboard/partners/create")}
+            className="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition"
+          >
+            Add Partner
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {partners.map((partner) => (
-            <TableRow key={partner._id}>
-              <TableCell>{partner.name}</TableCell>
-              <TableCell>
-                <a href={partner.website} target="_blank">
-                  {partner.website}
-                </a>
-              </TableCell>
-              <TableCell>{partner.status || "inactive"}</TableCell>
-              <TableCell>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => handleOpenModal(partner)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  size="small"
-                  color="secondary"
-                  variant="outlined"
-                  onClick={() => handleDelete(partner._id)}
-                  style={{ marginLeft: "8px" }}
-                >
-                  Delete
-                </Button>
-                <Button
-                  size="small"
-                  color="warning"
-                  variant="outlined"
-                  onClick={() => handleToggleStatus(partner._id)}
-                  style={{ marginLeft: "8px" }}
-                >
-                  Toggle Status
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+            <div
+              key={partner._id}
+              className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
+              onClick={() => router.push(`/dashboard/partners/${partner._id}`)}
+            >
+              {/* Partner Image */}
+              <div className="h-40 bg-linear-to-br from-pink-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                {partner.logo || partner.partnerImage?.url ? (
+                  <img
+                    src={partner.partnerImage?.url || partner.logo}
+                    alt={partner.name}
+                    className="h-full w-full object-cover rounded-t-lg"
+                  />
+                ) : (
+                  <Building2 size={48} className="text-pink-400" />
+                )}
+              </div>
 
-<Modal open={openModal} onClose={handleCloseModal}>
-  <div
-    style={{
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      background: "#fff",
-      padding: "20px",
-      borderRadius: "8px",
-      width: "400px",
-    }}
-  >
-    <h2>{editingPartner ? "Edit Partner" : "Add New Partner"}</h2>
-    <PartnerForm
-      initialData={editingPartner || undefined}
-      onCancel={handleCloseModal}
-      onSubmit={async (data) => {
-        if (editingPartner) {
-          await updatePartner(editingPartner._id, data);
-          toast.success("Partner updated successfully");
-        } else {
-          await createPartner(data);
-          toast.success("Partner created successfully");
-        }
-        fetchAllPartners();
-        handleCloseModal();
-      }}
-    />
-  </div>
-</Modal>
+              {/* Partner Info */}
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {partner.name}
+                  </h3>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      partner.isActive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {partner.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
+                {/* Profession */}
+                {partner.profession && (
+                  <p className="text-sm text-gray-600 mb-3">
+                    {partner.profession}
+                  </p>
+                )}
+
+                {/* Description */}
+                {partner.description && (
+                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+                    {partner.description}
+                  </p>
+                )}
+
+                {/* Contact Info */}
+                <div className="space-y-2 text-sm text-gray-600">
+                  {partner.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail size={14} className="text-gray-400" />
+                      <span className="truncate">{partner.email}</span>
+                    </div>
+                  )}
+
+                  {partner.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone size={14} className="text-gray-400" />
+                      <span>{partner.phone}</span>
+                    </div>
+                  )}
+
+                  {partner.website && (
+                    <div className="flex items-center gap-2">
+                      <Globe size={14} className="text-gray-400" />
+                      <a
+                        href={partner.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-pink-600 hover:underline truncate"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Visit Website
+                      </a>
+                    </div>
+                  )}
+
+                  {partner.businessAddress && (
+                    <div className="flex items-center gap-2">
+                      <MapPin size={14} className="text-gray-400" />
+                      <span className="truncate">{partner.businessAddress}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Partner Type Badge */}
+                {partner.partnerType && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium capitalize">
+                      {partner.partnerType}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-};
-
-export default AdminPartnersPage;
+}
