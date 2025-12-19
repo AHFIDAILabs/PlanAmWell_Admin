@@ -11,8 +11,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { usePartner } from "../hooks/usePartner";
+import { useEffect, useState } from "react";
+import { usePartnerContext } from "../context/PartnerContext";
 
 export default function Sidebar() {
   const router = useRouter();
@@ -21,15 +21,13 @@ export default function Sidebar() {
   const [advocacyOpen, setAdvocacyOpen] = useState(false);
   const [doctorsOpen, setDoctorsOpen] = useState(false);
 
-  const { partners, fetchAllPartners } = usePartner();
+  // ✅ Destructure partners and fetchAllPartners from context
+  const { partners, fetchAllPartners } = usePartnerContext();
 
-useEffect(() => {
-  const loadPartners = async () => {
-    await fetchAllPartners();
-  };
-  loadPartners();
-}, []);
-
+  // Fetch partners on mount
+  useEffect(() => {
+    fetchAllPartners();
+  }, [fetchAllPartners]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -133,24 +131,28 @@ useEffect(() => {
               {partnersOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
 
-          {partnersOpen && (
-  <div className="ml-6 mt-2 flex flex-col gap-1">
-    {partners.length === 0 ? (
-      <span className="text-gray-500 text-sm">No partners found</span>
-    ) : (
-      partners.map((partner) => (
-        <button
-          key={partner._id}
-          onClick={() => router.push(`/dashboard/partners/${partner._id}`)}
-          className="text-gray-600 text-sm hover:text-pink-600 text-left"
-        >
-          {partner.name}
-        </button>
-      ))
-    )}
-  </div>
-)}
-
+            {partnersOpen && (
+              <div className="ml-6 mt-2 flex flex-col gap-1">
+                {partners.length === 0 ? (
+                  <span className="text-gray-500 text-sm">No partners found</span>
+                ) : (
+                  partners.map((partner) => (
+                    <button
+                      key={partner._id}
+                      onClick={() => router.push(`/dashboard/partners/${partner._id}`)}
+                      className="text-gray-600 text-sm hover:text-pink-600 text-left"
+                    >
+                      {partner.name}{" "}
+                      {partner.isActive ? (
+                        <span className="text-green-600 text-xs ml-2">(Active)</span>
+                      ) : (
+                        <span className="text-red-600 text-xs ml-2">(Inactive)</span>
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </nav>
       </div>

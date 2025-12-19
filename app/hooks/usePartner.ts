@@ -45,7 +45,15 @@ const fetchAllPartners = useCallback(async () => {
   setError(null);
   try {
     const data = await getAllPartnersService();
-    setPartners(data || []); // <-- default to empty array
+    const mappedPartners = data.map((p: any) => ({
+      _id: p._id,
+      name: p.name,
+      logo: p.partnerImage || "",                     // fallback to empty string
+      website: p.website || p.socialLinks?.[0] || "", // use website or first social link
+      status: p.isActive ? "active" : "inactive",
+      ...p, // preserve original fields
+    }));
+    setPartners(mappedPartners);
   } catch (err: any) {
     console.error("[usePartner] fetchAllPartners error:", err);
     setError(err.message || "Failed to fetch partners");
@@ -55,20 +63,31 @@ const fetchAllPartners = useCallback(async () => {
 }, []);
 
 
-  const fetchPartnerById = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getPartnerByIdService(id);
-      return data;
-    } catch (err: any) {
-      console.error("[usePartner] fetchPartnerById error:", err);
-      setError(err.message || "Failed to fetch partner");
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+
+const fetchPartnerById = useCallback(async (id: string) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const data = await getPartnerByIdService(id);
+    if (!data) return null;
+
+    return {
+      _id: data._id,
+      name: data.name,
+      logo: data.partnerImage || "",
+      website: data.website || data.socialLinks?.[0] || "",
+      status: data.isActive ? "active" : "inactive",
+      ...data,
+    };
+  } catch (err: any) {
+    console.error("[usePartner] fetchPartnerById error:", err);
+    setError(err.message || "Failed to fetch partner");
+    return null;
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
 
   const createPartner = useCallback(async (formData: FormData) => {
     setLoading(true);
