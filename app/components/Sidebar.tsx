@@ -11,7 +11,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePartner } from "../hooks/usePartner";
 
 export default function Sidebar() {
   const router = useRouter();
@@ -19,6 +20,12 @@ export default function Sidebar() {
   const [partnersOpen, setPartnersOpen] = useState(false);
   const [advocacyOpen, setAdvocacyOpen] = useState(false);
   const [doctorsOpen, setDoctorsOpen] = useState(false);
+
+  const { partners, fetchAllPartners } = usePartner();
+
+  useEffect(() => {
+    fetchAllPartners();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -32,7 +39,6 @@ export default function Sidebar() {
         <h2 className="text-xl font-bold mb-8 text-pink-600">Admin Panel</h2>
 
         <nav className="space-y-2">
-
           {/* Dashboard */}
           <button
             onClick={() => router.push("/dashboard")}
@@ -49,7 +55,7 @@ export default function Sidebar() {
             <Users size={18} /> Users
           </button>
 
-          {/* Doctors (with sub-menu) */}
+          {/* Doctors */}
           <div>
             <button
               onClick={() => setDoctorsOpen(!doctorsOpen)}
@@ -80,7 +86,7 @@ export default function Sidebar() {
             )}
           </div>
 
-          {/* Advocacy (Articles) */}
+          {/* Advocacy */}
           <div>
             <button
               onClick={() => setAdvocacyOpen(!advocacyOpen)}
@@ -125,13 +131,15 @@ export default function Sidebar() {
 
             {partnersOpen && (
               <div className="ml-6 mt-2 flex flex-col gap-1">
-                <button
-                  onClick={() => router.push("/dashboard/partners/aha")}
-                  className="text-gray-600 text-sm hover:text-pink-600 text-left"
-                >
-                  Advantage Health Africa
-                </button>
-                {/* More partners can be added here */}
+                {partners.map((partner) => (
+                  <button
+                    key={partner._id}
+                    onClick={() => router.push(`/dashboard/partners/${partner._id}`)}
+                    className="text-gray-600 text-sm hover:text-pink-600 text-left"
+                  >
+                    {partner.name}
+                  </button>
+                ))}
               </div>
             )}
           </div>
