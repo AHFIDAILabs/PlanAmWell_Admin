@@ -8,7 +8,7 @@ const adminApi = axios.create({
 });
 
 
-const admiPartnerApi = axios.create({
+const adminPartnerApi = axios.create({
   baseURL: `${BASE_URL}/partners`,
 });
 // ==================== REQUEST INTERCEPTOR ====================
@@ -123,41 +123,41 @@ export const getCombinedGrowthService = async (months: number = 1) => {
 
 // ==================== ADMIN PARTNER SERVICES ====================
 export const getAllPartnersService = async () => {
-  const { data } = await admiPartnerApi.get("/partners");
+  const { data } = await adminPartnerApi.get("/");
   return data?.data || [];
 };
 
 export const getPartnerByIdService = async (partnerId: string) => {
-  const { data } = await admiPartnerApi.get(`/partners/${partnerId}`);
+  const { data } = await adminPartnerApi.get(`/${partnerId}`);
   return data?.data;
 };
 
 export const createPartnerService = async (formData: FormData) => {
-  const { data } = await admiPartnerApi.post("/partners", formData, {
+  const { data } = await adminPartnerApi.post("/", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return data?.data;
 };
 
 export const updatePartnerService = async (partnerId: string, formData: FormData) => {
-  const { data } = await admiPartnerApi.put(`/partners/${partnerId}`, formData, {
+  const { data } = await adminPartnerApi.put(`/${partnerId}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return data?.data;
 };
 
 export const deletePartnerService = async (partnerId: string) => {
-  const { data } = await admiPartnerApi.delete(`/partners/${partnerId}`);
+  const { data } = await adminPartnerApi.delete(`/${partnerId}`);
   return data?.data;
 };
 
 export const togglePartnerStatusService = async (partnerId: string) => {
-  const { data } = await admiPartnerApi.patch(`/partners/${partnerId}/toggle-status`);
+  const { data } = await adminPartnerApi.patch(`/${partnerId}/toggle-status`);
   return data?.data;
 };
 
 export const getPartnerStatsService = async () => {
-  const { data } = await admiPartnerApi.get("/partners/stats");
+  const { data } = await adminPartnerApi.get("/stats");
   return data?.data;
 };
 
