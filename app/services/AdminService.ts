@@ -2,15 +2,60 @@ import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// ==================== Admin API Instance ====================
-const adminApi = axios.create({
-  baseURL: `${BASE_URL}/admin`,
-});
 
 
 const adminPartnerApi = axios.create({
   baseURL: `${BASE_URL}/partners`,
 });
+
+// ==================== REQUEST INTERCEPTOR ====================
+adminPartnerApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+
+// ==================== RESPONSE INTERCEPTOR ====================
+adminPartnerApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) throw new Error("No refresh token");
+
+        const { data } = await axios.post(`${BASE_URL}/auth/refreshToken`, { refreshToken });
+
+        if (data.success && data.token) {
+          localStorage.setItem("token", data.token);
+          originalRequest.headers.Authorization = `Bearer ${data.token}`;
+          return adminPartnerApi(originalRequest);
+        }
+      } catch (refreshError) {
+        localStorage.clear();
+        window.location.href = "/adminLogin";
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+
+// ==================== Admin API Instance ====================
+const adminApi = axios.create({
+  baseURL: `${BASE_URL}/admin`,
+});
+
 // ==================== REQUEST INTERCEPTOR ====================
 adminApi.interceptors.request.use(
   (config) => {
