@@ -1,4 +1,3 @@
-// services/adminService.ts - UPDATED FRONTEND
 import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -9,75 +8,55 @@ const adminApi = axios.create({
 });
 
 // ==================== REQUEST INTERCEPTOR ====================
-// Automatically attach token to every request
 adminApi.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log("🔑 [adminApi] Token attached to request");
     } else {
       console.warn("⚠️ [adminApi] No token found in localStorage");
     }
-    
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // ==================== RESPONSE INTERCEPTOR ====================
-// Handle 401 errors and token refresh
 adminApi.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       console.log("🔄 [adminApi] 401 error - attempting token refresh");
-      
+
       try {
         const refreshToken = localStorage.getItem("refreshToken");
-        
-        if (!refreshToken) {
-          console.error("❌ [adminApi] No refresh token available");
-          throw new Error("No refresh token");
-        }
-        
-        // Call your refresh endpoint
-        const { data } = await axios.post(`${BASE_URL}/auth/refreshToken`, { 
-          refreshToken 
-        });
-        
+
+        if (!refreshToken) throw new Error("No refresh token");
+
+        const { data } = await axios.post(`${BASE_URL}/auth/refreshToken`, { refreshToken });
+
         if (data.success && data.token) {
-          console.log("✅ [adminApi] Token refreshed successfully");
-          
-          // Save new access token
           localStorage.setItem("token", data.token);
-          
-          // Update the header and retry the original request
           originalRequest.headers.Authorization = `Bearer ${data.token}`;
           return adminApi(originalRequest);
         }
       } catch (refreshError) {
         console.error("❌ [adminApi] Token refresh failed:", refreshError);
-        
-        // Clear storage and redirect to login
         localStorage.clear();
         window.location.href = "/adminLogin";
         return Promise.reject(refreshError);
       }
     }
 
-    // Handle 403 (Forbidden) errors
     if (error.response?.status === 403) {
       console.error("❌ [adminApi] 403 Forbidden - Insufficient permissions");
-      // Optionally redirect or show error message
     }
 
     return Promise.reject(error);
@@ -85,7 +64,6 @@ adminApi.interceptors.response.use(
 );
 
 // ==================== ADMIN AUTH SERVICES ====================
-
 export const registerAdminService = async (adminData: {
   firstName: string;
   lastName: string;
@@ -93,31 +71,17 @@ export const registerAdminService = async (adminData: {
   password: string;
 }) => {
   const { data } = await axios.post(`${BASE_URL}/admin/adminRegister`, adminData);
-  
-  if (data.success && data.data.token) {
-    localStorage.setItem("token", data.data.token);
-    console.log("✅ [registerAdminService] Token saved to localStorage");
-  }
-  
+  if (data.success && data.data.token) localStorage.setItem("token", data.data.token);
   return data?.data;
 };
 
-export const loginAdminService = async (credentials: {
-  email: string;
-  password: string;
-}) => {
+export const loginAdminService = async (credentials: { email: string; password: string }) => {
   const { data } = await axios.post(`${BASE_URL}/admin/adminLogin`, credentials);
-  
-  if (data.success && data.data.token) {
-    localStorage.setItem("token", data.data.token);
-    console.log("✅ [loginAdminService] Token saved to localStorage");
-  }
-  
+  if (data.success && data.data.token) localStorage.setItem("token", data.data.token);
   return data?.data;
 };
 
 // ==================== ADMIN DASHBOARD SERVICES ====================
-
 export const getPendingDoctors = async () => {
   const { data } = await adminApi.get("/doctors/pending");
   return data?.data || [];
@@ -148,23 +112,53 @@ export const getAllAdmins = async () => {
   return data?.data || [];
 };
 
-/**
- * Combined User & Doctor Growth Analytics
- * @param months - Number of months to fetch data for
- */
 export const getCombinedGrowthService = async (months: number = 1) => {
-  const { data } = await adminApi.get(`/combinedGrowth`, {
-    params: { months }
-  });
-  
+  const { data } = await adminApi.get(`/combinedGrowth`, { params: { months } });
   return data?.data || data;
 };
 
-// ==================== UTILITY FUNCTIONS ====================
-
-export const isAdminAuthenticated = (): boolean => {
-  return !!localStorage.getItem("token");
+// ==================== ADMIN PARTNER SERVICES ====================
+export const getAllPartnersService = async () => {
+  const { data } = await adminApi.get("/partners");
+  return data?.data || [];
 };
+
+export const getPartnerByIdService = async (partnerId: string) => {
+  const { data } = await adminApi.get(`/partners/${partnerId}`);
+  return data?.data;
+};
+
+export const createPartnerService = async (formData: FormData) => {
+  const { data } = await adminApi.post("/partners", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data?.data;
+};
+
+export const updatePartnerService = async (partnerId: string, formData: FormData) => {
+  const { data } = await adminApi.put(`/partners/${partnerId}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data?.data;
+};
+
+export const deletePartnerService = async (partnerId: string) => {
+  const { data } = await adminApi.delete(`/partners/${partnerId}`);
+  return data?.data;
+};
+
+export const togglePartnerStatusService = async (partnerId: string) => {
+  const { data } = await adminApi.patch(`/partners/${partnerId}/toggle-status`);
+  return data?.data;
+};
+
+export const getPartnerStatsService = async () => {
+  const { data } = await adminApi.get("/partners/stats");
+  return data?.data;
+};
+
+// ==================== UTILITY FUNCTIONS ====================
+export const isAdminAuthenticated = (): boolean => !!localStorage.getItem("token");
 
 export const logoutAdmin = () => {
   localStorage.removeItem("token");
@@ -185,4 +179,12 @@ export default {
   getCombinedGrowthService,
   isAdminAuthenticated,
   logoutAdmin,
+  // Partner Services
+  getAllPartnersService,
+  getPartnerByIdService,
+  createPartnerService,
+  updatePartnerService,
+  deletePartnerService,
+  togglePartnerStatusService,
+  getPartnerStatsService,
 };
