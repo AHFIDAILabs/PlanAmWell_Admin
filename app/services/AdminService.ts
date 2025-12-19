@@ -2,58 +2,9 @@ import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-
-
-const adminPartnerApi = axios.create({
-  baseURL: `${BASE_URL}/partners`,
-});
-
-// ==================== REQUEST INTERCEPTOR ====================
-adminPartnerApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-
-// ==================== RESPONSE INTERCEPTOR ====================
-adminPartnerApi.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) throw new Error("No refresh token");
-
-        const { data } = await axios.post(`${BASE_URL}/auth/refreshToken`, { refreshToken });
-
-        if (data.success && data.token) {
-          localStorage.setItem("token", data.token);
-          originalRequest.headers.Authorization = `Bearer ${data.token}`;
-          return adminPartnerApi(originalRequest);
-        }
-      } catch (refreshError) {
-        localStorage.clear();
-        window.location.href = "/adminLogin";
-        return Promise.reject(refreshError);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
-
 // ==================== Admin API Instance ====================
 const adminApi = axios.create({
-  baseURL: `${BASE_URL}/admin`,
+  baseURL: `${BASE_URL}`,
 });
 
 // ==================== REQUEST INTERCEPTOR ====================
@@ -132,78 +83,140 @@ export const loginAdminService = async (credentials: { email: string; password: 
 
 // ==================== ADMIN DASHBOARD SERVICES ====================
 export const getPendingDoctors = async () => {
-  const { data } = await adminApi.get("/doctors/pending");
+  const { data } = await adminApi.get("/admin/doctors/pending");
   return data?.data || [];
 };
 
 export const updateDoctorStatusService = async (doctorId: string, status: string) => {
-  const { data } = await adminApi.put(`/doctors/${doctorId}`, { status });
+  const { data } = await adminApi.put(`/admin/doctors/${doctorId}`, { status });
   return data?.data;
 };
 
 export const getAllDoctors = async () => {
-  const { data } = await adminApi.get("/doctors");
+  const { data } = await adminApi.get("/admin/doctors");
   return data?.data || [];
 };
 
 export const getAllUsers = async () => {
-  const { data } = await adminApi.get("/users");
+  const { data } = await adminApi.get("/admin/users");
   return data?.data || [];
 };
 
 export const getAUser = async (userId: string) => {
-  const { data } = await adminApi.get(`/user/${userId}`);
+  const { data } = await adminApi.get(`admin/user/${userId}`);
   return data?.data;
 };
 
 export const getAllAdmins = async () => {
-  const { data } = await adminApi.get("/allAdmins");
+  const { data } = await adminApi.get("admin/allAdmins");
   return data?.data || [];
 };
 
 export const getCombinedGrowthService = async (months: number = 1) => {
-  const { data } = await adminApi.get(`/combinedGrowth`, { params: { months } });
+  const { data } = await adminApi.get(`admin/combinedGrowth`, { params: { months } });
   return data?.data || data;
 };
 
 // ==================== ADMIN PARTNER SERVICES ====================
+// Use adminApi with /partners prefix (assuming routes are under /admin)
 export const getAllPartnersService = async () => {
-  const { data } = await adminPartnerApi.get("/");
-  return data?.data || [];
+  try {
+    console.log("📡 Fetching all partners...");
+    const { data } = await adminApi.get("/partners/");
+    console.log("✅ Partners response:", data);
+    return data?.data || [];
+  } catch (error: any) {
+    console.error("❌ getAllPartnersService error:", error.response?.data || error);
+    throw error;
+  }
 };
 
 export const getPartnerByIdService = async (partnerId: string) => {
-  const { data } = await adminPartnerApi.get(`/${partnerId}`);
-  return data?.data;
+  try {
+    console.log("📡 Fetching partner:", partnerId);
+    const { data } = await adminApi.get(`/partners/${partnerId}`);
+    console.log("✅ Partner response:", data);
+    return data?.data;
+  } catch (error: any) {
+    console.error("❌ getPartnerByIdService error:", error.response?.data || error);
+    throw error;
+  }
 };
 
 export const createPartnerService = async (formData: FormData) => {
-  const { data } = await adminPartnerApi.post("/", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return data?.data;
+  try {
+    console.log("📡 Creating partner...");
+    
+    // Log what we're sending
+    console.log("FormData entries:");
+    for (let [key, value] of formData.entries()) {
+      console.log(`  ${key}:`, value);
+    }
+
+    const { data } = await adminApi.post("/partners/", formData, {
+      headers: { 
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    
+    console.log("✅ Create partner response:", data);
+    return data?.data;
+  } catch (error: any) {
+    console.error("❌ createPartnerService error:", error.response?.data || error);
+    console.error("Error status:", error.response?.status);
+    console.error("Error headers:", error.response?.headers);
+    throw error;
+  }
 };
 
 export const updatePartnerService = async (partnerId: string, formData: FormData) => {
-  const { data } = await adminPartnerApi.put(`/${partnerId}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return data?.data;
+  try {
+    console.log("📡 Updating partner:", partnerId);
+    const { data } = await adminApi.put(`/partners/${partnerId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    console.log("✅ Update partner response:", data);
+    return data?.data;
+  } catch (error: any) {
+    console.error("❌ updatePartnerService error:", error.response?.data || error);
+    throw error;
+  }
 };
 
 export const deletePartnerService = async (partnerId: string) => {
-  const { data } = await adminPartnerApi.delete(`/${partnerId}`);
-  return data?.data;
+  try {
+    console.log("📡 Deleting partner:", partnerId);
+    const { data } = await adminApi.delete(`/partners/${partnerId}`);
+    console.log("✅ Delete partner response:", data);
+    return data?.data;
+  } catch (error: any) {
+    console.error("❌ deletePartnerService error:", error.response?.data || error);
+    throw error;
+  }
 };
 
 export const togglePartnerStatusService = async (partnerId: string) => {
-  const { data } = await adminPartnerApi.patch(`/${partnerId}/toggle-status`);
-  return data?.data;
+  try {
+    console.log("📡 Toggling partner status:", partnerId);
+    const { data } = await adminApi.patch(`/partners/${partnerId}/toggle-status`);
+    console.log("✅ Toggle status response:", data);
+    return data?.data;
+  } catch (error: any) {
+    console.error("❌ togglePartnerStatusService error:", error.response?.data || error);
+    throw error;
+  }
 };
 
 export const getPartnerStatsService = async () => {
-  const { data } = await adminPartnerApi.get("/stats");
-  return data?.data;
+  try {
+    console.log("📡 Fetching partner stats...");
+    const { data } = await adminApi.get("/partners/stats");
+    console.log("✅ Partner stats response:", data);
+    return data?.data;
+  } catch (error: any) {
+    console.error("❌ getPartnerStatsService error:", error.response?.data || error);
+    throw error;
+  }
 };
 
 // ==================== UTILITY FUNCTIONS ====================

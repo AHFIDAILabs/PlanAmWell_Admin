@@ -1,5 +1,5 @@
 // hooks/usePartner.ts
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   getAllPartnersService,
   getPartnerByIdService,
@@ -40,66 +40,83 @@ export const usePartner = (): UsePartnerHook => {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<any>(null);
 
-const fetchAllPartners = useCallback(async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    const data = await getAllPartnersService();
-    const mappedPartners = data.map((p: any) => ({
-      _id: p._id,
-      name: p.name,
-      logo: p.partnerImage || "",                     // fallback to empty string
-      website: p.website || p.socialLinks?.[0] || "", // use website or first social link
-      status: p.isActive ? "active" : "inactive",
-      ...p, // preserve original fields
-    }));
-    setPartners(mappedPartners);
-  } catch (err: any) {
-    console.error("[usePartner] fetchAllPartners error:", err);
-    setError(err.message || "Failed to fetch partners");
-  } finally {
-    setLoading(false);
-  }
-}, []);
+  const fetchAllPartners = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getAllPartnersService();
+      console.log("✅ Fetched partners:", data);
+      
+      const mappedPartners = data.map((p: any) => ({
+        _id: p._id,
+        name: p.name,
+        logo: p.partnerImage?.url || p.partnerImage || "",
+        website: p.website || p.socialLinks?.[0] || "",
+        status: p.isActive ? "active" : "inactive",
+        ...p,
+      }));
+      setPartners(mappedPartners);
+    } catch (err: any) {
+      console.error("[usePartner] fetchAllPartners error:", err);
+      console.error("Error response:", err.response?.data);
+      setError(err.response?.data?.message || err.message || "Failed to fetch partners");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  const fetchPartnerById = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getPartnerByIdService(id);
+      if (!data) return null;
 
-
-const fetchPartnerById = useCallback(async (id: string) => {
-  setLoading(true);
-  setError(null);
-  try {
-    const data = await getPartnerByIdService(id);
-    if (!data) return null;
-
-    return {
-      _id: data._id,
-      name: data.name,
-      logo: data.partnerImage || "",
-      website: data.website || data.socialLinks?.[0] || "",
-      status: data.isActive ? "active" : "inactive",
-      ...data,
-    };
-  } catch (err: any) {
-    console.error("[usePartner] fetchPartnerById error:", err);
-    setError(err.message || "Failed to fetch partner");
-    return null;
-  } finally {
-    setLoading(false);
-  }
-}, []);
-
+      return {
+        _id: data._id,
+        name: data.name,
+        logo: data.partnerImage?.url || data.partnerImage || "",
+        website: data.website || data.socialLinks?.[0] || "",
+        status: data.isActive ? "active" : "inactive",
+        ...data,
+      };
+    } catch (err: any) {
+      console.error("[usePartner] fetchPartnerById error:", err);
+      console.error("Error response:", err.response?.data);
+      setError(err.response?.data?.message || err.message || "Failed to fetch partner");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const createPartner = useCallback(async (formData: FormData) => {
     setLoading(true);
     setError(null);
     try {
+      console.log("📤 Sending create partner request...");
+      
+      // Log FormData contents for debugging
+      console.log("FormData contents:");
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
+      }
+
       const newPartner = await createPartnerService(formData);
+      console.log("✅ Partner created:", newPartner);
+      
       setPartners((prev) => [...prev, newPartner]);
       return newPartner;
     } catch (err: any) {
       console.error("[usePartner] createPartner error:", err);
-      setError(err.message || "Failed to create partner");
-      return null;
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      
+      const errorMessage = err.response?.data?.message || err.message || "Failed to create partner";
+      setError(errorMessage);
+      
+      // Re-throw the error so the component can catch it
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -109,15 +126,22 @@ const fetchPartnerById = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
     try {
+      console.log("📤 Sending update partner request for ID:", id);
+      
       const updatedPartner = await updatePartnerService(id, formData);
+      console.log("✅ Partner updated:", updatedPartner);
+      
       setPartners((prev) =>
         prev.map((p) => (p._id === id ? updatedPartner : p))
       );
       return updatedPartner;
     } catch (err: any) {
       console.error("[usePartner] updatePartner error:", err);
-      setError(err.message || "Failed to update partner");
-      return null;
+      console.error("Error response:", err.response?.data);
+      
+      const errorMessage = err.response?.data?.message || err.message || "Failed to update partner";
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -132,7 +156,8 @@ const fetchPartnerById = useCallback(async (id: string) => {
       return true;
     } catch (err: any) {
       console.error("[usePartner] deletePartner error:", err);
-      setError(err.message || "Failed to delete partner");
+      console.error("Error response:", err.response?.data);
+      setError(err.response?.data?.message || err.message || "Failed to delete partner");
       return false;
     } finally {
       setLoading(false);
@@ -150,7 +175,8 @@ const fetchPartnerById = useCallback(async (id: string) => {
       return updatedPartner;
     } catch (err: any) {
       console.error("[usePartner] togglePartnerStatus error:", err);
-      setError(err.message || "Failed to toggle status");
+      console.error("Error response:", err.response?.data);
+      setError(err.response?.data?.message || err.message || "Failed to toggle status");
       return null;
     } finally {
       setLoading(false);
@@ -166,7 +192,8 @@ const fetchPartnerById = useCallback(async (id: string) => {
       return data;
     } catch (err: any) {
       console.error("[usePartner] fetchPartnerStats error:", err);
-      setError(err.message || "Failed to fetch stats");
+      console.error("Error response:", err.response?.data);
+      setError(err.response?.data?.message || err.message || "Failed to fetch stats");
       return null;
     } finally {
       setLoading(false);

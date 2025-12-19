@@ -83,18 +83,28 @@ export default function CreatePartnerPage() {
     try {
       const formDataToSend = new FormData();
 
-      // Add all form fields
+      // Add all form fields except socialLinks
       Object.entries(formData).forEach(([key, value]) => {
-        formDataToSend.append(key, value.toString());
+        if (key !== 'socialLinks') {
+          formDataToSend.append(key, value.toString());
+        }
       });
 
-      // Add social links (filter out empty ones)
+      // Add social links as individual entries (NOT JSON string)
       const validSocialLinks = socialLinks.filter((link) => link.trim() !== "");
-      formDataToSend.append("socialLinks", JSON.stringify(validSocialLinks));
+      validSocialLinks.forEach((link) => {
+        formDataToSend.append("socialLinks[]", link);
+      });
 
       // Add image if selected
       if (imageFile) {
         formDataToSend.append("image", imageFile);
+      }
+
+      // Debug: Log FormData contents
+      console.log("=== FormData Contents ===");
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`${key}:`, value);
       }
 
       const result = await createPartner(formDataToSend);
@@ -109,7 +119,12 @@ export default function CreatePartnerPage() {
       }
     } catch (error: any) {
       console.error("Create partner error:", error);
-      setSubmitError(error.message || "An error occurred while creating the partner");
+      console.error("Error details:", error.response?.data || error);
+      setSubmitError(
+        error.response?.data?.message || 
+        error.message || 
+        "An error occurred while creating the partner"
+      );
     }
   };
 
