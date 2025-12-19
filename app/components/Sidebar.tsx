@@ -23,9 +23,13 @@ export default function Sidebar() {
 
   const { partners, fetchAllPartners } = usePartner();
 
-  useEffect(() => {
-    fetchAllPartners();
-  }, []);
+useEffect(() => {
+  const loadPartners = async () => {
+    await fetchAllPartners();
+  };
+  loadPartners();
+}, []);
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -129,19 +133,24 @@ export default function Sidebar() {
               {partnersOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
 
-            {partnersOpen && (
-              <div className="ml-6 mt-2 flex flex-col gap-1">
-                {partners.map((partner) => (
-                  <button
-                    key={partner._id}
-                    onClick={() => router.push(`/dashboard/partners/${partner._id}`)}
-                    className="text-gray-600 text-sm hover:text-pink-600 text-left"
-                  >
-                    {partner.name}
-                  </button>
-                ))}
-              </div>
-            )}
+          {partnersOpen && (
+  <div className="ml-6 mt-2 flex flex-col gap-1">
+    {partners.length === 0 ? (
+      <span className="text-gray-500 text-sm">No partners found</span>
+    ) : (
+      partners.map((partner) => (
+        <button
+          key={partner._id}
+          onClick={() => router.push(`/dashboard/partners/${partner._id}`)}
+          className="text-gray-600 text-sm hover:text-pink-600 text-left"
+        >
+          {partner.name}
+        </button>
+      ))
+    )}
+  </div>
+)}
+
           </div>
         </nav>
       </div>

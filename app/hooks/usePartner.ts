@@ -40,19 +40,20 @@ export const usePartner = (): UsePartnerHook => {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<any>(null);
 
-  const fetchAllPartners = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getAllPartnersService();
-      setPartners(data);
-    } catch (err: any) {
-      console.error("[usePartner] fetchAllPartners error:", err);
-      setError(err.message || "Failed to fetch partners");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+const fetchAllPartners = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const data = await getAllPartnersService();
+    setPartners(data || []); // <-- default to empty array
+  } catch (err: any) {
+    console.error("[usePartner] fetchAllPartners error:", err);
+    setError(err.message || "Failed to fetch partners");
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
 
   const fetchPartnerById = useCallback(async (id: string) => {
     setLoading(true);
