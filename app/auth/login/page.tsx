@@ -15,10 +15,19 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
 
   // Redirect if already logged in
+  const [hydrated, setHydrated] = useState(false); // track hydration
+
   useEffect(() => {
+    setHydrated(true); // mark client is mounted
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return; // wait until hydration
     const token = localStorage.getItem("token");
-    if (token) router.replace("/dashboard");
-  }, [router]);
+    if (token) router.replace("/dashboard"); // redirect only after hydration
+  }, [hydrated, router]);
+
+  if (!hydrated) return null; // prevent flashing / SSR redirect
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
