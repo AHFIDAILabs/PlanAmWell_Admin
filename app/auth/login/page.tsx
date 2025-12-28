@@ -15,16 +15,28 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [hydrated, setHydrated] = useState(false);
 
-  // ✅ Hydration guard
   useEffect(() => {
     setHydrated(true);
   }, []);
 
-  // ✅ Redirect if already logged in
+  // ✅ Only check token once
   useEffect(() => {
     if (!hydrated) return;
+
     const token = localStorage.getItem("token");
-    if (token) router.replace("/dashboard");
+    if (token) {
+      // Optional: simple token validation
+      try {
+        const decoded = JSON.parse(atob(token.split(".")[1])); // decode JWT payload
+        if (decoded?.exp && Date.now() >= decoded.exp * 1000) {
+          localStorage.removeItem("token"); // expired
+        } else {
+          router.replace("/dashboard"); // redirect once
+        }
+      } catch {
+        localStorage.removeItem("token"); // malformed token
+      }
+    }
   }, [hydrated, router]);
 
   if (!hydrated) return null;
@@ -54,10 +66,10 @@ export default function AdminLoginPage() {
       );
 
       const token = response.data?.data?.token || response.data?.token;
-      if (!token) throw new Error("Token not found in response");
+      if (!token) throw new Error("Token not found");
 
       localStorage.setItem("token", token);
-      router.replace("/dashboard"); // safe client redirect
+      router.replace("/dashboard");
     } catch (err: any) {
       console.error(err);
       setError(err.response?.data?.message || "Login failed. Please try again.");
@@ -68,13 +80,11 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left side image */}
       <div
         className="hidden md:flex w-1/2 bg-cover bg-center"
         style={{ backgroundImage: "url('/Reproductive.jpeg')" }}
       ></div>
 
-      {/* Right side form */}
       <div className="flex w-full md:w-1/2 items-center justify-center px-4">
         <form
           onSubmit={handleSubmit}
