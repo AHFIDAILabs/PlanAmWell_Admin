@@ -23,7 +23,6 @@ export default function PendingDoctors() {
     <div className="bg-linear-to-r from-pink-50 to-purple-50 p-6 rounded-2xl shadow-2xl">
       <div className="flex justify-between items-center mb-6">
         <h3 className="font-extrabold text-2xl text-pink-600">🩺 Doctor Management</h3>
-
         <button
           onClick={fetchDoctors}
           className="bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-500 transition-all shadow-md"
@@ -65,66 +64,60 @@ export default function PendingDoctors() {
             <th className="py-3 px-4 text-left">Name</th>
             <th className="py-3 px-4 text-left">Specialization</th>
             <th className="py-3 px-4 text-left">Submitted</th>
+            <th className="py-3 px-4 text-left">Availability</th>
             <th className="py-3 px-4 text-left">Actions</th>
           </tr>
         </thead>
 
-<tbody>
-  {(tab === "pending" ? pendingDoctors : approvedDoctors).map((doc: any) => (
-    <tr key={doc._id} className="odd:bg-pink-50 even:bg-purple-50 hover:bg-purple-100 transition-colors">
-      <td className="py-3 px-4 font-semibold text-gray-700">
-        {doc.name || `${doc.firstName || ""} ${doc.lastName || ""}`.trim() || "No Name"}
-      </td>
-
-      <td className="py-3 px-4 text-gray-600">
-        {typeof doc.specialization === "string" ? doc.specialization : JSON.stringify(doc.specialization)}
-      </td>
-
-      <td className="py-3 px-4 text-gray-500">
-        {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : "N/A"}
-      </td>
-
-      <td className="py-3 px-4 text-gray-500">
-        {doc.available ? `${doc.available.from || "N/A"} - ${doc.available.to || "N/A"}` : "N/A"}
-      </td>
-
-      <td className="py-3 px-4 flex space-x-2">
-        <button
-          onClick={() => router.push(`/dashboard/doctors/${doc._id}`)}
-          className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs font-semibold shadow transition"
-        >
-          👁️ View
-        </button>
-
-        {tab === "pending" && (
-          <>
-            <button
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                updatingId === doc._id ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-500"
-              } text-white`}
-              onClick={() => updateDoctorStatus(doc._id, "approved")}
-              disabled={updatingId === doc._id}
+        <tbody>
+          {(tab === "pending" ? pendingDoctors : approvedDoctors).map((doc: any) => (
+            <tr
+              key={doc._id}
+              className="odd:bg-pink-50 even:bg-purple-50 hover:bg-purple-100 transition-colors"
             >
-              ✅ Approve
-            </button>
+              <td className="py-3 px-4 font-semibold text-gray-700">{doc.fullName}</td>
+              <td className="py-3 px-4 text-gray-600">{doc.specializationDisplay}</td>
+              <td className="py-3 px-4 text-gray-500">{doc.createdAtDisplay}</td>
+              <td className="py-3 px-4 text-gray-500">{doc.availableDisplay}</td>
+              <td className="py-3 px-4 flex space-x-2">
+                <button
+                  onClick={() => router.push(`/dashboard/doctors/${doc._id}`)}
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs font-semibold shadow transition"
+                >
+                  👁️ View
+                </button>
 
-            <button
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                updatingId === doc._id ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-500"
-              } text-white`}
-              onClick={() => updateDoctorStatus(doc._id, "rejected")}
-              disabled={updatingId === doc._id}
-            >
-              ❌ Deny
-            </button>
-          </>
-        )}
-      </td>
-    </tr>
-  ))}
-</tbody>
+                {tab === "pending" && (
+                  <>
+                    <button
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                        updatingId === doc._id
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-green-600 hover:bg-green-500"
+                      } text-white`}
+                      onClick={() => updateDoctorStatus(doc._id, "approved")}
+                      disabled={updatingId === doc._id}
+                    >
+                      ✅ Approve
+                    </button>
 
-
+                    <button
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                        updatingId === doc._id
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-red-600 hover:bg-red-500"
+                      } text-white`}
+                      onClick={() => updateDoctorStatus(doc._id, "rejected")}
+                      disabled={updatingId === doc._id}
+                    >
+                      ❌ Deny
+                    </button>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
       </table>
 
       {(tab === "pending" ? pendingDoctors : approvedDoctors).length === 0 && (

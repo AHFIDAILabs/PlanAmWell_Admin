@@ -1,8 +1,25 @@
-// hooks/useAllDoctors.ts
 import { useState, useEffect } from "react";
 import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// Helper to flatten nested objects for safe rendering
+const normalizeDoctor = (doc: any) => ({
+  ...doc,
+  fullName: doc.name || `${doc.firstName || ""} ${doc.lastName || ""}`.trim() || "No Name",
+  specializationDisplay:
+    typeof doc.specialization === "string"
+      ? doc.specialization
+      : Array.isArray(doc.specialization)
+      ? doc.specialization.join(", ")
+      : JSON.stringify(doc.specialization || "Unknown"),
+  createdAtDisplay: doc.createdAt
+    ? new Date(doc.createdAt).toLocaleDateString()
+    : "N/A",
+  availableDisplay: doc.available
+    ? `${doc.available.from || "N/A"} - ${doc.available.to || "N/A"}`
+    : "N/A",
+});
 
 export const useAllDoctors = () => {
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -18,7 +35,7 @@ export const useAllDoctors = () => {
       const { data } = await axios.get(`${BASE_URL}/admin/doctors`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setDoctors(data.data);
+      setDoctors(data.data.map(normalizeDoctor));
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to fetch doctors");
@@ -38,9 +55,8 @@ export const useAllDoctors = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Update state with updated doctor
       setDoctors((prev) =>
-        prev.map((doc) => (doc._id === id ? data.data : doc))
+        prev.map((doc) => (doc._id === id ? normalizeDoctor(data.data) : doc))
       );
     } catch (err: any) {
       console.error(err);

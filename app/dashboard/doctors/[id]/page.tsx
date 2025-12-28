@@ -4,6 +4,18 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getAllDoctors, updateDoctorStatusService } from "../../../services/AdminService";
 
+// Helper to safely display nested objects
+const formatAvailability = (availability: any) => {
+  if (!availability) return "N/A";
+  return Object.entries(availability).map(([day, hours]: [string, any]) => {
+    const hoursText =
+      typeof hours === "string" ? hours :
+      hours?.from && hours?.to ? `${hours.from} - ${hours.to}` :
+      JSON.stringify(hours);
+    return { day, hoursText };
+  });
+};
+
 export default function DoctorDetailPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -19,7 +31,18 @@ export default function DoctorDetailPage() {
       try {
         const data = await getAllDoctors();
         const doc = data.find((d: any) => d._id === id);
-        setDoctor(doc);
+        if (doc) {
+          // Flatten and normalize fields for safe rendering
+          setDoctor({
+            ...doc,
+            fullName: doc.name || `${doc.firstName || ""} ${doc.lastName || ""}`.trim() || "No Name",
+            specializationDisplay: Array.isArray(doc.specialization)
+              ? doc.specialization.join(", ")
+              : doc.specialization || "N/A",
+            availabilityDisplay: formatAvailability(doc.availability),
+            createdAtDisplay: doc.createdAt ? new Date(doc.createdAt).toLocaleString() : "N/A",
+          });
+        }
       } catch (err: any) {
         setError(err.message || "Failed to fetch doctor");
       } finally {
@@ -48,7 +71,7 @@ export default function DoctorDetailPage() {
     try {
       setUpdating(true);
       await updateDoctorStatusService(doctor._id, status);
-      setDoctor({ ...doctor, status }); // update local state
+      setDoctor({ ...doctor, status });
     } catch (err: any) {
       alert(err.message || "Failed to update status");
     } finally {
@@ -67,13 +90,11 @@ export default function DoctorDetailPage() {
         <div className="flex items-center space-x-6">
           <img
             src={imageSrc}
-            alt={doctor.firstName}
+            alt={doctor.fullName}
             className="w-24 h-24 rounded-full object-cover border-2 border-pink-600"
           />
           <div>
-            <h1 className="text-3xl font-bold text-pink-600">
-              {doctor.firstName} {doctor.lastName}
-            </h1>
+            <h1 className="text-3xl font-bold text-pink-600">{doctor.fullName}</h1>
             <span className={`inline-block px-4 py-2 rounded-full font-medium ${getStatusColor(doctor.status)}`}>
               {doctor.status.toUpperCase()}
             </span>
@@ -81,40 +102,39 @@ export default function DoctorDetailPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-          <p><strong>Email:</strong> {doctor.email}</p>
-          <p><strong>License Number:</strong> {doctor.licenseNumber}</p>
-          <p><strong>Specialization:</strong> {doctor.specialization || "N/A"}</p>
+          <p><strong>Email:</strong> {doctor.email || "N/A"}</p>
+          <p><strong>License Number:</strong> {doctor.licenseNumber || "N/A"}</p>
+          <p><strong>Specialization:</strong> {doctor.specializationDisplay}</p>
           <p><strong>Years of Experience:</strong> {doctor.yearsOfExperience ?? "N/A"}</p>
           <p><strong>Contact Number:</strong> {doctor.contactNumber || "N/A"}</p>
-          <p><strong>Joined At:</strong> {new Date(doctor.createdAt).toLocaleString()}</p>
+          <p><strong>Joined At:</strong> {doctor.createdAtDisplay}</p>
           <p className="sm:col-span-2"><strong>Bio:</strong> {doctor.bio || "N/A"}</p>
- <div className="sm:col-span-2">
-  <strong>Availability:</strong>
-  {doctor.availability ? (
-    <div className="overflow-x-auto mt-2">
-      <table className="min-w-full border border-gray-200 rounded-lg text-gray-700">
-        <thead className="bg-pink-100">
-          <tr>
-            <th className="py-2 px-4 border-b text-left">Day</th>
-            <th className="py-2 px-4 border-b text-left">Hours</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(doctor.availability).map(([day, hours]: [string, any]) => (
-            <tr key={day} className="hover:bg-pink-50 transition-colors">
-              <td className="py-2 px-4 border-b capitalize">{day}</td>
-              <td className="py-2 px-4 border-b">{hours || "N/A"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ) : (
-    <p>N/A</p>
-  )}
-</div>
 
-
+          <div className="sm:col-span-2">
+            <strong>Availability:</strong>
+            {doctor.availabilityDisplay?.length ? (
+              <div className="overflow-x-auto mt-2">
+                <table className="min-w-full border border-gray-200 rounded-lg text-gray-700">
+                  <thead className="bg-pink-100">
+                    <tr>
+                      <th className="py-2 px-4 border-b text-left">Day</th>
+                      <th className="py-2 px-4 border-b text-left">Hours</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {doctor.availabilityDisplay.map((a: any) => (
+                      <tr key={a.day} className="hover:bg-pink-50 transition-colors">
+                        <td className="py-2 px-4 border-b capitalize">{a.day}</td>
+                        <td className="py-2 px-4 border-b">{a.hoursText}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p>N/A</p>
+            )}
+          </div>
         </div>
 
         <div className="flex justify-between mt-6">
