@@ -10,34 +10,37 @@ const adminApi = axios.create({
 // ==================== REQUEST INTERCEPTOR ====================
 adminApi.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log("🔑 [adminApi] Token attached to request");
-    } else {
-      console.warn("⚠️ [adminApi] No token found in localStorage");
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log(" [adminApi] Token attached to request");
+      } else {
+        console.warn(" [adminApi] No token found in localStorage");
+      }
     }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
 // ==================== RESPONSE INTERCEPTOR ====================
+
+
 adminApi.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
+    // Only run client-side
+    if (typeof window === "undefined") return Promise.reject(error);
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
       console.log("🔄 [adminApi] 401 error - attempting token refresh");
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
-
         if (!refreshToken) throw new Error("No refresh token");
 
         const { data } = await axios.post(`${BASE_URL}/auth/refreshToken`, { refreshToken });
@@ -50,7 +53,8 @@ adminApi.interceptors.response.use(
       } catch (refreshError) {
         console.error("❌ [adminApi] Token refresh failed:", refreshError);
         localStorage.clear();
-        window.location.href = "/adminLogin";
+        // Use router replace on client instead of window.location.href
+        window.location.assign("/auth/login");
         return Promise.reject(refreshError);
       }
     }
@@ -62,7 +66,6 @@ adminApi.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 // ==================== ADMIN AUTH SERVICES ====================
 export const registerAdminService = async (adminData: {
   firstName: string;
