@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, TextField, Button } from "@mui/material";
 import toast from "react-hot-toast";
-import { Partner } from "../hooks/usePartner";
+import { Partner } from "../types/partner";
 
 interface PartnerFormProps {
   initialData?: Partner;
