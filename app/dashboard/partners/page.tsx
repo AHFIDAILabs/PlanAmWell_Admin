@@ -52,19 +52,22 @@ export default function PartnerDetailsPage() {
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<"overview" | "orders" | "commission">("overview");
 
+  const partnerId =typeof params.id === "string" ? params.id : params.id?.[0];
+
+
   // Fetch partner data
   useEffect(() => {
     const loadPartner = async () => {
       setLoading(true);
       try {
         // First, try to find in context
-        const contextPartner = partners.find((p) => p._id === params.id);
+        const contextPartner = partners.find((p) => p._id === partnerId);
         
         if (contextPartner) {
           setPartner(contextPartner);
         } else {
           // If not in context, fetch directly from API
-          const fetchedPartner = await getPartnerByIdService(params.id as string);
+          const fetchedPartner = await getPartnerByIdService(partnerId as string);
           setPartner(fetchedPartner);
         }
       } catch (error) {
@@ -75,10 +78,10 @@ export default function PartnerDetailsPage() {
       }
     };
 
-    if (params.id) {
+    if (partnerId) {
       loadPartner();
     }
-  }, [params.id, partners]);
+  }, [partnerId]);
 
   // Fetch orders when partner is loaded and orders tab is selected
   useEffect(() => {
@@ -93,7 +96,7 @@ export default function PartnerDetailsPage() {
     setLoadingOrders(true);
     setOrdersError(null);
     try {
-      const response = await fetch(`/api/partners/${params.id}/orders`);
+      const response = await fetch(`/api/partners/${partnerId}/orders`);
       if (response.ok) {
         const data = await response.json();
         setOrders(data.orders || data.data || []);
@@ -212,7 +215,7 @@ export default function PartnerDetailsPage() {
           </div>
 
           <button
-            onClick={() => router.push(`/dashboard/partners/${params.id}/edit`)}
+            onClick={() => router.push(`/dashboard/partners/${partnerId}/edit`)}
             className="flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition"
           >
             <Edit size={18} />
