@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { usePartner, Partner } from "../../../hooks/usePartner";
+import { usePartner, Partner } from "../../../../hooks/usePartner";
 import { 
   ArrowLeft, 
   Upload, 
