@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
 import { usePartner as usePartnerHook } from "../hooks/usePartner";
 import { Partner } from "../types/partner";
 
@@ -15,10 +15,14 @@ const PartnerContext = createContext<PartnerContextType | undefined>(undefined);
 
 export const PartnerProvider = ({ children }: { children: ReactNode }) => {
   const { partners, loading, error, fetchAllPartners } = usePartnerHook();
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    fetchAllPartners();
-  }, []);
+    if (!hasFetchedRef.current) {
+      fetchAllPartners();
+      hasFetchedRef.current = true;
+    }
+  }, [fetchAllPartners]);
 
   return (
     <PartnerContext.Provider value={{ partners, loading, error, fetchAllPartners }}>

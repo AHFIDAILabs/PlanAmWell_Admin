@@ -56,32 +56,30 @@ export default function PartnerDetailsPage() {
 
 
   // Fetch partner data
-  useEffect(() => {
-    const loadPartner = async () => {
-      setLoading(true);
-      try {
-        // First, try to find in context
-        const contextPartner = partners.find((p) => p._id === partnerId);
-        
-        if (contextPartner) {
-          setPartner(contextPartner);
-        } else {
-          // If not in context, fetch directly from API
-          const fetchedPartner = await getPartnerByIdService(partnerId as string);
-          setPartner(fetchedPartner);
-        }
-      } catch (error) {
-        console.error("Failed to load partner:", error);
-        setPartner(null);
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  const loadPartner = async () => {
+    setLoading(true);
+    try {
+      const contextPartner = partners.find((p) => p._id === partnerId);
+      
+      if (contextPartner) {
+        setPartner(contextPartner);
+      } else {
+        const fetchedPartner = await getPartnerByIdService(partnerId as string);
+        setPartner(fetchedPartner);
       }
-    };
-
-    if (partnerId) {
-      loadPartner();
+    } catch (error) {
+      console.error("Failed to load partner:", error);
+      setPartner(null);
+    } finally {
+      setLoading(false);
     }
-  }, [partnerId]);
+  };
+
+  if (partnerId) {
+    loadPartner();
+  }
+}, [partnerId, partners]); 
 
   // Fetch orders when partner is loaded and orders tab is selected
   useEffect(() => {
