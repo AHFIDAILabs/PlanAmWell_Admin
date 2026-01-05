@@ -54,9 +54,19 @@ export default function PartnerDetailsPage() {
 
   const partnerId =typeof params.id === "string" ? params.id : params.id?.[0];
 
-
-  // Fetch partner data
+// Fetch partner data
 useEffect(() => {
+  // Don't run if we already have the partner loaded
+  if (partner && partner._id === partnerId) {
+    return;
+  }
+
+  // Don't run if partners array is empty (still loading from context)
+  if (partners.length === 0) {
+    setLoading(true);
+    return;
+  }
+
   const loadPartner = async () => {
     setLoading(true);
     try {
@@ -79,7 +89,7 @@ useEffect(() => {
   if (partnerId) {
     loadPartner();
   }
-}, [partnerId, partners]); 
+}, [partnerId, partners.length]); // ✅ Use partners.length instead of partners
 
   // Fetch orders when partner is loaded and orders tab is selected
   useEffect(() => {
