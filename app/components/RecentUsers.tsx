@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAllUsers } from "../hooks/useAllUsers";
+import { useRouter } from "next/navigation";
 
 // UserModal Component
 interface UserModalProps {
@@ -245,6 +246,7 @@ export default function RecentUsersCarousel() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const router = useRouter();
 
   // Automatic horizontal scroll with smooth infinite loop
   useEffect(() => {
@@ -344,7 +346,8 @@ export default function RecentUsersCarousel() {
         </div>
       )}
 
-      <button className="mt-4 sm:mt-6 w-full py-2 sm:py-3 bg-pink-600 text-white font-semibold rounded-full hover:bg-pink-500 active:scale-95 transition-all shadow-lg text-sm sm:text-base">
+      <button className="mt-4 sm:mt-6 w-full py-2 sm:py-3 bg-pink-600 text-white font-semibold rounded-full hover:bg-pink-500 active:scale-95 transition-all shadow-lg text-sm sm:text-base"
+      onClick={() => router.push("/dashboard/users")}>
         View All Users
       </button>
 

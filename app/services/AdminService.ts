@@ -138,16 +138,19 @@ export const getAllPartnersService = async () => {
 };
 
 export const getPartnerByIdService = async (partnerId: string) => {
+  console.log("API URL:", adminApi.defaults.baseURL, `/partners/${partnerId}`);
+
   try {
     console.log("📡 Fetching partner:", partnerId);
     const { data } = await adminApi.get(`/partners/${partnerId}`);
     console.log("✅ Partner response:", data);
     return data?.data;
   } catch (error: any) {
-    console.error("❌ getPartnerByIdService error:", error.response?.data || error);
+    console.error("❌ getPartnerByIdService error:", error.response?.data || error.message || error);
     throw error;
   }
 };
+
 
 export const createPartnerService = async (formData: FormData) => {
   try {

@@ -54,7 +54,7 @@ export default function PartnersListPage() {
             <p className="text-gray-600 mt-1">Manage your partner network</p>
           </div>
           <button
-            onClick={() => router.push("/dashboard/partners/new")}
+            onClick={() => router.push("/dashboard/partners/create")}
             className="flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition"
           >
             <Plus size={18} />
@@ -82,7 +82,6 @@ export default function PartnersListPage() {
             <option value="all">All Types</option>
             <option value="individual">Individual</option>
             <option value="business">Business</option>
-            <option value="corporate">Corporate</option>
           </select>
         </div>
       </div>
@@ -125,7 +124,7 @@ export default function PartnersListPage() {
           </p>
           {!searchTerm && filterType === "all" && (
             <button
-              onClick={() => router.push("/dashboard/partners/new")}
+              onClick={() => router.push("/dashboard/partners/create")}
               className="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition"
             >
               Add Partner
@@ -141,7 +140,7 @@ export default function PartnersListPage() {
             >
               {/* Partner Header */}
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center overflow-hidden">
+                <div className="w-16 h-16 rounded-lg bg-linear-to-br from-pink-100 to-purple-100 flex items-center justify-center overflow-hidden">
                   {partner.logo || partner.partnerImage?.url ? (
                     <img
                       src={partner.partnerImage?.url || partner.logo}
