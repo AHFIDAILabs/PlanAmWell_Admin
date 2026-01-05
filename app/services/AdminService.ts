@@ -51,13 +51,16 @@ adminApi.interceptors.response.use(
           return adminApi(originalRequest);
         }
       } catch (refreshError) {
-        console.error("❌ [adminApi] Token refresh failed:", refreshError);
-        localStorage.clear();
-        // Use router replace on client instead of window.location.href
+    console.error("❌ [adminApi] Token refresh failed:", refreshError);
+    localStorage.clear();
+    
+    // ONLY redirect if we aren't already on the login page
+    if (typeof window !== "undefined" && !window.location.pathname.includes("/auth/login")) {
         window.location.assign("/auth/login");
-        return Promise.reject(refreshError);
-      }
     }
+    return Promise.reject(refreshError);
+}
+}
 
     if (error.response?.status === 403) {
       console.error("❌ [adminApi] 403 Forbidden - Insufficient permissions");

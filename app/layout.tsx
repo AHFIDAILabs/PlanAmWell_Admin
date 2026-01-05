@@ -12,19 +12,14 @@ export const metadata = {
   description: "Dashboard for Plan Am Well",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
         <ThemeProvider>
-          <PartnerProvider>
-            {children}
-            <Toaster position="top-right" reverseOrder={false} />
-          </PartnerProvider>
+           {/* Remove PartnerProvider from here */}
+           {children}
+           <Toaster position="top-right" />
         </ThemeProvider>
       </body>
     </html>

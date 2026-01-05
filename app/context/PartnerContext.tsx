@@ -18,9 +18,12 @@ export const PartnerProvider = ({ children }: { children: ReactNode }) => {
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (!hasFetchedRef.current) {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    
+    // Check ref first, then token.
+    if (!hasFetchedRef.current && token) {
+      hasFetchedRef.current = true; // Set this BEFORE the async call to prevent race conditions
       fetchAllPartners();
-      hasFetchedRef.current = true;
     }
   }, [fetchAllPartners]);
 

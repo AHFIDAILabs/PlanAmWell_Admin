@@ -35,31 +35,31 @@ export const usePartner = (): UsePartnerHook => {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<any>(null);
 
-  const fetchAllPartners = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getAllPartnersService();
-      console.log("✅ Fetched partners:", data);
-      
-      const mappedPartners = data.map((p: any) => ({
-        _id: p._id,
-        name: p.name,
-        logo: p.partnerImage?.url || p.partnerImage || "",
-        website: p.website || p.socialLinks?.[0] || "",
-        status: p.isActive ? "active" : "inactive",
-        ...p,
-      }));
-      setPartners(mappedPartners);
-    } catch (err: any) {
-      console.error("[usePartner] fetchAllPartners error:", err);
-      console.error("Error response:", err.response?.data);
-      setError(err.response?.data?.message || err.message || "Failed to fetch partners");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+const fetchAllPartners = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await getAllPartnersService();
+    
+    // ✅ FIX: Extract array from { success: true, count: 4, data: [...] }
+    const actualData = response?.data || (Array.isArray(response) ? response : []);
 
+    const mappedPartners = actualData.map((p: any) => ({
+      ...p,
+      _id: p._id,
+      name: p.name,
+      logo: p.partnerImage?.url || p.partnerImage || "",
+      website: p.website || p.socialLinks?.[0] || "",
+      status: p.isActive ? "active" : "inactive",
+    }));
+
+    setPartners(mappedPartners);
+  } catch (err: any) {
+    setError(err.message || "Failed to fetch partners");
+  } finally {
+    setLoading(false); // This stops contextLoading
+  }
+}, []);
   const fetchPartnerById = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);

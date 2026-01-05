@@ -19,22 +19,34 @@ export default function AdminLoginPage() {
     setHydrated(true);
   }, []);
 
-  // ✅ Only check token once
+  /**
+   * ✅ Improved Token Check
+   * Redirects to dashboard if a valid token exists
+   */
   useEffect(() => {
     if (!hydrated) return;
 
     const token = localStorage.getItem("token");
     if (token) {
-      // Optional: simple token validation
       try {
-        const decoded = JSON.parse(atob(token.split(".")[1])); // decode JWT payload
-        if (decoded?.exp && Date.now() >= decoded.exp * 1000) {
-          localStorage.removeItem("token"); // expired
+        // Simple JWT expiration check
+        const payload = token.split(".")[1];
+        if (!payload) throw new Error("Invalid token format");
+        
+        const decoded = JSON.parse(atob(payload));
+        const isExpired = decoded?.exp && Date.now() >= decoded.exp * 1000;
+
+        if (isExpired) {
+          console.warn("Token expired, clearing storage.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
         } else {
-          router.replace("/dashboard"); // redirect once
+          router.replace("/dashboard");
         }
-      } catch {
-        localStorage.removeItem("token"); // malformed token
+      } catch (err) {
+        console.error("Token validation failed:", err);
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
       }
     }
   }, [hydrated, router]);
@@ -65,14 +77,29 @@ export default function AdminLoginPage() {
         }
       );
 
-      const token = response.data?.data?.token || response.data?.token;
-      if (!token) throw new Error("Token not found");
+      // Extract data from standard response format
+      const loginData = response.data?.data || response.data;
+      const token = loginData?.token;
+      const refreshToken = loginData?.refreshToken;
 
+      if (!token) {
+        throw new Error("Authentication failed: Token not received.");
+      }
+
+      // ✅ Store both Access and Refresh tokens
       localStorage.setItem("token", token);
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
+
       router.replace("/dashboard");
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      console.error("Login Error:", err);
+      setError(
+        err.response?.data?.message || 
+        err.message || 
+        "Login failed. Please check your credentials and try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -80,66 +107,106 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex min-h-screen">
+      {/* Side Image Decoration */}
       <div
         className="hidden md:flex w-1/2 bg-cover bg-center"
         style={{ backgroundImage: "url('/Reproductive.jpeg')" }}
-      ></div>
+      >
+        <div className="w-full h-full bg-black/20 flex items-center justify-center">
+            <h1 className="text-white text-4xl font-bold px-10 text-center drop-shadow-lg">
+                Welcome to Plan Am Well Admin
+            </h1>
+        </div>
+      </div>
 
+      {/* Login Form Section */}
       <div className="flex w-full md:w-1/2 items-center justify-center px-4">
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg"
-          style={{ background: colors.card, color: colors.text }}
+          className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg border"
+          style={{ 
+            background: colors.card, 
+            color: colors.text,
+            borderColor: colors.border 
+          }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
-          {error && <p className="mb-4 text-red-600">{error}</p>}
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold mb-2">Admin Login</h2>
+            <p className="text-sm opacity-70">Enter your credentials to access the dashboard</p>
+          </div>
 
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            disabled={loading}
-            className="w-full p-3 mb-4 rounded border outline-none"
-            style={{
-              borderColor: colors.border,
-              background: colors.background,
-              color: colors.text,
-            }}
-          />
+          {error && (
+            <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
 
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            disabled={loading}
-            className="w-full p-3 mb-4 rounded border outline-none"
-            style={{
-              borderColor: colors.border,
-              background: colors.background,
-              color: colors.text,
-            }}
-          />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 opacity-80">Email Address</label>
+              <input
+                name="email"
+                type="email"
+                placeholder="admin@example.com"
+                value={form.email}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="w-full p-3 rounded border outline-none transition-all focus:ring-2 focus:ring-pink-500/20"
+                style={{
+                  borderColor: colors.border,
+                  background: colors.background,
+                  color: colors.text,
+                }}
+              />
+            </div>
 
-          <div className="flex justify-between mb-4 text-sm">
-            <Link href="/auth/forgot-password" className="text-blue-600 hover:underline">
+            <div>
+              <label className="block text-sm font-medium mb-1 opacity-80">Password</label>
+              <input
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="w-full p-3 rounded border outline-none transition-all focus:ring-2 focus:ring-pink-500/20"
+                style={{
+                  borderColor: colors.border,
+                  background: colors.background,
+                  color: colors.text,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center mt-6 mb-8 text-sm">
+            <Link href="/auth/forgot-password" className="text-pink-600 hover:underline">
               Forgot Password?
             </Link>
-            <Link href="/auth/register" className="text-blue-600 hover:underline">
-              Register
-            </Link>
+            <div className="flex items-center gap-1">
+                <span className="opacity-60">New here?</span>
+                <Link href="/auth/register" className="text-pink-600 hover:underline font-medium">
+                Create Account
+                </Link>
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded font-semibold"
-            style={{ background: colors.primary, color: colors.text }}
+            className={`w-full py-3 rounded-lg font-bold transition-all transform active:scale-[0.98] ${
+                loading ? "opacity-70 cursor-not-allowed" : "hover:shadow-md"
+            }`}
+            style={{ background: colors.primary, color: "#fff" }}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Logging in...</span>
+                </div>
+            ) : "Login"}
           </button>
         </form>
       </div>

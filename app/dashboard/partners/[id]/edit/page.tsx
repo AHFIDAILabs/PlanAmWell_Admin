@@ -77,8 +77,8 @@ export default function PartnerDetailPage() {
           }
 
           // Set image preview if exists
-          if (data.partnerImage?.imageUrl || data.partnerImage?.url) {
-            setImagePreview(data.partnerImage.imageUrl || data.partnerImage.url || null);
+          if (data.partnerImage?.publicId || data.partnerImage?.url) {
+            setImagePreview(data.partnerImage.url || null);
           }
         }
       } catch (error: any) {
@@ -137,7 +137,7 @@ export default function PartnerDetailPage() {
 
   const removeImage = () => {
     setImageFile(null);
-    setImagePreview(partner?.partnerImage?.imageUrl || partner?.partnerImage?.url || null);
+    setImagePreview(partner?.partnerImage?.publicId || partner?.partnerImage?.url || null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
