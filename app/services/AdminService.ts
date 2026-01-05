@@ -231,6 +231,42 @@ export const logoutAdmin = () => {
   console.log("✅ [logoutAdmin] Admin logged out");
 };
 
+
+/**
+ * Get all orders for a specific partner
+ */
+export const getPartnerOrdersService = async (partnerId: string) => {
+  try {
+    console.log("📡 Fetching orders for partner:", partnerId);
+    const { data } = await adminApi.get(`/partners/${partnerId}/orders`);
+    console.log("✅ Partner orders response:", data);
+    return data?.data || [];
+  } catch (error: any) {
+    console.error("❌ getPartnerOrdersService error:", error.response?.data || error);
+    throw error;
+  }
+};
+
+/**
+ * Get commission report for a specific partner by month/year
+ */
+export const getPartnerCommissionReportService = async (
+  partnerId: string,
+  year: number,
+  month: number
+) => {
+  try {
+    console.log(`📡 Fetching commission report for partner: ${partnerId}, ${year}-${month}`);
+    const { data } = await adminApi.get(`/partners/${partnerId}/commission`, {
+      params: { year, month },
+    });
+    console.log("✅ Commission report response:", data);
+    return data?.data || [];
+  } catch (error: any) {
+    console.error("❌ getPartnerCommissionReportService error:", error.response?.data || error);
+    throw error;
+  }
+};
 // ==================== EXPORTS ====================
 export default {
   registerAdminService,
@@ -252,4 +288,6 @@ export default {
   deletePartnerService,
   togglePartnerStatusService,
   getPartnerStatsService,
+  getPartnerOrdersService,
+  getPartnerCommissionReportService,
 };
