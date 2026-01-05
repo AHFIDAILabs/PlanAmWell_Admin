@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { usePartner as usePartnerHook, Partner } from "../hooks/usePartner";
+import { usePartner as usePartnerHook } from "../hooks/usePartner";
+import { Partner } from "../types/partner";
 
 interface PartnerContextType {
   partners: Partner[];

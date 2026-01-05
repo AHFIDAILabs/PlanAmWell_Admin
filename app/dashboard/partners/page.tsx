@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { usePartnerContext } from "../../context/PartnerContext";
+import { getPartnerByIdService } from "../../services/AdminService";
 import {
   Building2,
   Mail,
@@ -19,8 +20,11 @@ import {
   Clock,
   Truck,
   XCircle,
+  AlertCircle,
+  Download,
 } from "lucide-react";
 
+import { Partner } from "@/app/types/partner";
 interface Order {
   id: string;
   orderId: string;
@@ -33,43 +37,72 @@ interface Order {
   };
   frontImage?: string;
   itemCount: number;
-  orderDate?: string;
+  createdAt?: string;
 }
+
 
 export default function PartnerDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { partners, loading, fetchAllPartners } = usePartnerContext();
+  const { partners } = usePartnerContext();
+  const [partner, setPartner] = useState<Partner | null>(null);
+  const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<"overview" | "orders" | "commission">("overview");
 
-  const partner = partners.find((p) => p._id === params.id);
-
+  // Fetch partner data
   useEffect(() => {
-    if (partners.length === 0) {
-      fetchAllPartners();
+    const loadPartner = async () => {
+      setLoading(true);
+      try {
+        // First, try to find in context
+        const contextPartner = partners.find((p) => p._id === params.id);
+        
+        if (contextPartner) {
+          setPartner(contextPartner);
+        } else {
+          // If not in context, fetch directly from API
+          const fetchedPartner = await getPartnerByIdService(params.id as string);
+          setPartner(fetchedPartner);
+        }
+      } catch (error) {
+        console.error("Failed to load partner:", error);
+        setPartner(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (params.id) {
+      loadPartner();
     }
-  }, [partners, fetchAllPartners]);
+  }, [params.id, partners]);
 
+  // Fetch orders when partner is loaded and orders tab is selected
   useEffect(() => {
-    // Fetch orders for this partner if they're a corporate/pharmacy partner
-    if (partner && partner.partnerType === "business") {
+    if (partner && partner.partnerType === "business" && selectedTab === "orders") {
       fetchPartnerOrders();
     }
-  }, [partner]);
+  }, [partner, selectedTab]);
 
   const fetchPartnerOrders = async () => {
+    if (!partner) return;
+    
     setLoadingOrders(true);
+    setOrdersError(null);
     try {
-      // Replace with your actual API call to partner's endpoint
       const response = await fetch(`/api/partners/${params.id}/orders`);
       if (response.ok) {
         const data = await response.json();
-        setOrders(data.orders || []);
+        setOrders(data.orders || data.data || []);
+      } else {
+        throw new Error("Failed to fetch orders");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch partner orders:", error);
+      setOrdersError(error.message || "Failed to load orders");
     } finally {
       setLoadingOrders(false);
     }
@@ -108,8 +141,20 @@ export default function PartnerDetailsPage() {
   if (!partner) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          Partner not found
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="text-red-600" size={24} />
+            <div>
+              <h3 className="text-red-700 font-semibold">Partner not found</h3>
+              <p className="text-red-600 text-sm">The partner you're looking for doesn't exist or has been removed.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push("/dashboard/partners")}
+            className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+          >
+            Back to Partners
+          </button>
         </div>
       </div>
     );
@@ -189,7 +234,7 @@ export default function PartnerDetailsPage() {
           >
             Overview
           </button>
-          {partner.partnerType === "corporate" && (
+          {(partner.partnerType === "business" || partner.partnerType === "corporate") && (
             <>
               <button
                 onClick={() => setSelectedTab("orders")}
@@ -283,8 +328,8 @@ export default function PartnerDetailsPage() {
             )}
           </div>
 
-          {/* Quick Stats (for corporate partners) */}
-          {partner.partnerType === "corporate" && (
+          {/* Quick Stats (for business/corporate partners) */}
+          {(partner.partnerType === "business" || partner.partnerType === "corporate") && (
             <div className="space-y-4">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <div className="flex items-center gap-3 mb-2">
@@ -310,8 +355,11 @@ export default function PartnerDetailsPage() {
                   <h3 className="text-sm font-medium text-gray-600">Active Orders</h3>
                 </div>
                 <p className="text-3xl font-bold text-gray-800">
-                  {orders.filter((o) => o.status.toLowerCase().includes("pending") || 
-                    o.status.toLowerCase().includes("processing")).length}
+                  {orders.filter((o) => 
+                    o.status.toLowerCase().includes("pending") || 
+                    o.status.toLowerCase().includes("processing") ||
+                    o.status.toLowerCase().includes("shipped")
+                  ).length}
                 </p>
               </div>
             </div>
@@ -324,13 +372,23 @@ export default function PartnerDetailsPage() {
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-800">Partner Orders</h2>
             <p className="text-sm text-gray-600 mt-1">
-              All orders from {partner.name}
+              All orders fulfilled by {partner.name}
             </p>
           </div>
 
           {loadingOrders ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
+            </div>
+          ) : ordersError ? (
+            <div className="p-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+                <AlertCircle className="text-red-600" size={20} />
+                <div>
+                  <p className="text-red-700 font-medium">Failed to load orders</p>
+                  <p className="text-red-600 text-sm">{ordersError}</p>
+                </div>
+              </div>
             </div>
           ) : orders.length === 0 ? (
             <div className="text-center py-12">
@@ -404,8 +462,8 @@ export default function PartnerDetailsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {order.orderDate
-                          ? new Date(order.orderDate).toLocaleDateString()
+                        {order.createdAt
+                          ? new Date(order.createdAt).toLocaleDateString()
                           : "N/A"}
                       </td>
                     </tr>

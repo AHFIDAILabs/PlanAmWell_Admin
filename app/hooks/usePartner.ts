@@ -10,14 +10,9 @@ import {
   getPartnerStatsService,
 } from "../services/AdminService";
 
-export interface Partner {
-  _id: string;
-  name: string;
-  logo?: string;
-  website?: string;
-  status?: "active" | "inactive";
-  [key: string]: any;
-}
+import { Partner } from "../types/partner";
+
+
 
 interface UsePartnerHook {
   partners: Partner[];

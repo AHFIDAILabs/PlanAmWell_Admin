@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { usePartner, Partner } from "../../../../hooks/usePartner";
+import { usePartner } from "../../../../hooks/usePartner";
+import { Partner } from "../../../../types/partner";
 import { 
   ArrowLeft, 
   Upload, 
@@ -33,7 +34,7 @@ export default function PartnerDetailPage() {
     businessAddress: "",
     description: "",
     website: "",
-    partnerType: "business" as "individual" | "business",
+    partnerType: "business" as "individual" | "business" | string,
     isActive: true,
   });
 
@@ -64,7 +65,7 @@ export default function PartnerDetailPage() {
             businessAddress: data.businessAddress || "",
             description: data.description || "",
             website: data.website || "",
-            partnerType: data.partnerType || "business",
+            partnerType: data.partnerType || "business" || "",
             isActive: data.isActive !== undefined ? data.isActive : true,
           });
 
@@ -77,7 +78,7 @@ export default function PartnerDetailPage() {
 
           // Set image preview if exists
           if (data.partnerImage?.imageUrl || data.partnerImage?.url) {
-            setImagePreview(data.partnerImage.imageUrl || data.partnerImage.url);
+            setImagePreview(data.partnerImage.imageUrl || data.partnerImage.url || null);
           }
         }
       } catch (error: any) {
