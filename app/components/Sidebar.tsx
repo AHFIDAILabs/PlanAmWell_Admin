@@ -15,7 +15,6 @@ import { useState } from "react";
 
 export default function Sidebar() {
   const router = useRouter();
-
   const [advocacyOpen, setAdvocacyOpen] = useState(false);
   const [doctorsOpen, setDoctorsOpen] = useState(false);
 
@@ -24,17 +23,23 @@ export default function Sidebar() {
     router.replace("/auth/login");
   };
 
+  const menuButtonClasses =
+    "flex items-center gap-3 font-medium w-full text-left px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-pink-50 hover:text-pink-600";
+
+  const subMenuButtonClasses =
+    "pl-12 py-1 text-sm text-gray-600 rounded-md hover:text-pink-600 hover:bg-pink-50 transition-colors duration-200";
+
   return (
-    <aside className="w-64 bg-white border-r border-pink-600 p-6 hidden md:flex flex-col justify-between">
+    <aside className="w-64 bg-white border-r border-gray-200 p-6 hidden md:flex flex-col justify-between shadow-sm">
       {/* Top Section */}
       <div>
-        <h2 className="text-xl font-bold mb-8 text-pink-600">Admin Panel</h2>
+        <h2 className="text-xl font-semibold mb-8 text-pink-600">Admin Panel</h2>
 
-        <nav className="space-y-2">
+        <nav className="space-y-1">
           {/* Dashboard */}
           <button
             onClick={() => router.push("/dashboard")}
-            className="flex items-center gap-3 text-pink-600 font-medium hover:text-pink-600 cursor-pointer w-full text-left"
+            className={menuButtonClasses}
           >
             <Home size={18} /> Dashboard
           </button>
@@ -42,7 +47,7 @@ export default function Sidebar() {
           {/* Users */}
           <button
             onClick={() => router.push("/dashboard/users")}
-            className="flex items-center gap-3 text-gray-700 font-medium hover:text-pink-600 cursor-pointer w-full text-left"
+            className={menuButtonClasses}
           >
             <Users size={18} /> Users
           </button>
@@ -51,7 +56,7 @@ export default function Sidebar() {
           <div>
             <button
               onClick={() => setDoctorsOpen(!doctorsOpen)}
-              className="flex items-center justify-between w-full text-gray-700 font-medium hover:text-pink-600 cursor-pointer gap-3"
+              className={`${menuButtonClasses} justify-between`}
             >
               <div className="flex items-center gap-3">
                 <Stethoscope size={18} /> Doctors
@@ -59,30 +64,25 @@ export default function Sidebar() {
               {doctorsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
 
-            {doctorsOpen && (
-              <div className="ml-6 mt-2 flex flex-col gap-1">
-                <button
-                  onClick={() => router.push("/dashboard/doctors")}
-                  className="text-gray-600 text-sm hover:text-pink-600 text-left"
-                >
-                  All Doctors
-                </button>
-
-                <button
-                  onClick={() => router.push("/dashboard/doctors/applications")}
-                  className="text-gray-600 text-sm hover:text-pink-600 text-left"
-                >
-                  Doctor Applications
-                </button>
-              </div>
-            )}
+            <div
+              className={`flex flex-col mt-1 gap-1 overflow-hidden transition-all duration-300 ${
+                doctorsOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+              }`}
+            >
+              <button
+                onClick={() => router.push("/dashboard/doctors")}
+                className={subMenuButtonClasses}
+              >
+                All Doctors
+              </button>
+            </div>
           </div>
 
           {/* Advocacy */}
           <div>
             <button
               onClick={() => setAdvocacyOpen(!advocacyOpen)}
-              className="flex items-center justify-between w-full text-gray-700 font-medium hover:text-pink-600 cursor-pointer gap-3"
+              className={`${menuButtonClasses} justify-between`}
             >
               <div className="flex items-center gap-3">
                 <FileText size={18} /> Advocacy
@@ -90,29 +90,31 @@ export default function Sidebar() {
               {advocacyOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
 
-            {advocacyOpen && (
-              <div className="ml-6 mt-2 flex flex-col gap-1">
-                <button
-                  onClick={() => router.push("/dashboard/advocacy")}
-                  className="text-gray-600 text-sm hover:text-pink-600 text-left"
-                >
-                  All Articles
-                </button>
+            <div
+              className={`flex flex-col mt-1 gap-1 overflow-hidden transition-all duration-300 ${
+                advocacyOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+              }`}
+            >
+              <button
+                onClick={() => router.push("/dashboard/advocacy")}
+                className={subMenuButtonClasses}
+              >
+                All Articles
+              </button>
 
-                <button
-                  onClick={() => router.push("/dashboard/advocacy/create")}
-                  className="text-gray-600 text-sm hover:text-pink-600 text-left"
-                >
-                  Create New Article
-                </button>
-              </div>
-            )}
+              <button
+                onClick={() => router.push("/dashboard/advocacy/create")}
+                className={subMenuButtonClasses}
+              >
+                Create New Article
+              </button>
+            </div>
           </div>
 
-          {/* Partners - Now navigates to partners page */}
+          {/* Partners */}
           <button
             onClick={() => router.push("/dashboard/partners")}
-            className="flex items-center gap-3 text-gray-700 font-medium hover:text-pink-600 cursor-pointer w-full text-left"
+            className={menuButtonClasses}
           >
             <Building2 size={18} /> Partners
           </button>
@@ -122,7 +124,7 @@ export default function Sidebar() {
       {/* Logout */}
       <button
         onClick={handleLogout}
-        className="flex items-center gap-3 text-red-600 font-medium hover:text-red-700 cursor-pointer mt-10"
+        className="flex items-center gap-3 text-red-500 font-medium hover:text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors duration-200 mt-6"
       >
         <LogOut size={18} /> Logout
       </button>

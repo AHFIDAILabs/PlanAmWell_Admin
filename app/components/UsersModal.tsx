@@ -41,14 +41,15 @@ function UserModal({ user, loading, error, onClose }: UserModalProps) {
             {/* Header with Avatar */}
             <div className="flex flex-col items-center mb-6">
               <div className="relative mb-4">
-                <img
-                  src={user.userImage?.url || "/avatars/default.png"}
-                  alt={user.name}
-                  className="w-24 h-24 rounded-full object-cover border-4 border-pink-400 shadow-lg"
-                  onError={(e) => {
-                    e.currentTarget.src = "/avatars/default.png";
-                  }}
-                />
+             <img
+  src={user.userImage?.url || "/repro1.jpeg"}
+  alt={user.name || "User"}
+  className="w-24 h-24 rounded-full object-cover border-4 border-pink-400 shadow-lg"
+  onError={(e) => {
+    e.currentTarget.src = "/repro1.jpeg";  // use your existing image
+  }}
+/>
+
                 <span className="absolute bottom-1 right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white"></span>
               </div>
               <h2 className="font-bold text-2xl text-gray-800">{user.name}</h2>

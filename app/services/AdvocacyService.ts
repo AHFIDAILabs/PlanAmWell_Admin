@@ -157,3 +157,15 @@ export const getAdvocacyStats = async () => {
   });
   return res.data;
 };
+
+export const getArticleStats = async (id: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const res = await axios.get(`${BASE}/advocacy/admin/stats/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.data;
+};
