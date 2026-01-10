@@ -18,7 +18,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 export default function ArticleAnalytics() {
   const params = useParams();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id; // ensure string
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,6 @@ export default function ArticleAnalytics() {
 
   const { article } = stats;
 
-  // Daily views chart
   const dailyViewsChart = {
     labels: article.dailyViews?.map((d: any) => d.date) || [],
     datasets: [
@@ -58,7 +57,7 @@ export default function ArticleAnalytics() {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Article Title */}
-      <h1 className="text-3xl font-bold text-pink-600">{article.title}Analytics</h1>
+      <h1 className="text-3xl font-bold text-pink-600">{article.title} Analytics</h1>
 
       {/* Basic Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -148,18 +147,33 @@ export default function ArticleAnalytics() {
         </div>
       )}
 
-      {/* Comments */}
+      {/* Comments Section */}
       {article.comments?.length > 0 && (
         <div className="bg-white p-4 rounded shadow">
-          <h2 className="font-semibold mb-2">Comments ({article.comments.length})</h2>
-          <ul className="list-disc list-inside text-gray-700 max-h-64 overflow-y-auto">
-            {article.comments.map((c: any, i: number) => (
-              <li key={i}>
-                <span className="font-semibold">{c.author}: </span>
-                {c.text}
-              </li>
+          <h2 className="font-semibold mb-3">
+            Comments ({article.comments.length})
+          </h2>
+
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {article.comments.map((c: any) => (
+              <div key={c._id} className="border-b pb-2 last:border-none">
+                <p className="text-sm font-semibold text-gray-800">
+                  {c.author?.name || "Anonymous"}{" "}
+                  {c.status === "flagged" && (
+                    <span className="ml-2 text-xs text-red-600 font-normal">
+                      [Flagged: {c.flagReason}]
+                    </span>
+                  )}
+                </p>
+
+                <p className="text-gray-600 text-sm">{c.content}</p>
+
+                <div className="text-xs text-gray-400 mt-1">
+                  {new Date(c.createdAt).toLocaleString()} • ❤️ {c.likes}
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>
