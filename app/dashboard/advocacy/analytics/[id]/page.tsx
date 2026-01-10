@@ -147,7 +147,7 @@ export default function ArticleAnalytics() {
         </div>
       )}
 
-     {/* Comments Section */}
+{/* Comments Section */}
 {article.comments?.length > 0 && (
   <div className="bg-white p-4 rounded shadow">
     <h2 className="font-semibold mb-3">
@@ -155,32 +155,79 @@ export default function ArticleAnalytics() {
     </h2>
 
     <div className="space-y-3 max-h-80 overflow-y-auto">
-      {article.comments.map((c: any) => (
-        <div key={c._id} className="border-b pb-2 last:border-none">
-          <p className="text-sm font-semibold text-gray-800">
-            {c.author && typeof c.author === "object"
-              ? c.author.name || "Anonymous"
-              : "Anonymous"}{" "}
-            {c.status === "flagged" && (
-              <span className="ml-2 text-xs text-red-600 font-normal">
-                [Flagged: {c.flagReason}]
-              </span>
+      {article.comments.map((comment: any) => {
+        // Safely extract author name
+        let authorName = "Anonymous";
+        if (comment.author) {
+          if (typeof comment.author === "string") {
+            authorName = comment.author;
+          } else if (typeof comment.author === "object" && comment.author.name) {
+            authorName = comment.author.name;
+          }
+        }
+
+        // Safely extract flagged reason
+        const flaggedReason = comment.status === "flagged" && comment.flagReason
+          ? `: ${comment.flagReason}`
+          : "";
+
+        return (
+          <div key={comment._id} className="border-b pb-2 last:border-none">
+            <p className="text-sm font-semibold text-gray-800">
+              {authorName}{" "}
+              {comment.status === "flagged" && (
+                <span className="ml-2 text-xs text-red-600 font-normal">
+                  [Flagged{flaggedReason}]
+                </span>
+              )}
+            </p>
+
+            <p className="text-gray-600 text-sm">{comment.content}</p>
+
+            <div className="text-xs text-gray-400 mt-1">
+              {new Date(comment.createdAt).toLocaleString()} • ❤️ {comment.likes || 0}
+            </div>
+
+            {/* Nested replies (if any) */}
+            {Array.isArray(comment.replies) && comment.replies.length > 0 && (
+              <div className="ml-4 mt-2 space-y-2">
+                {comment.replies.map((reply: any) => {
+                  let replyAuthor = "Anonymous";
+                  if (reply.author) {
+                    if (typeof reply.author === "string") replyAuthor = reply.author;
+                    else if (typeof reply.author === "object" && reply.author.name) replyAuthor = reply.author.name;
+                  }
+
+                  const replyFlaggedReason = reply.status === "flagged" && reply.flagReason
+                    ? `: ${reply.flagReason}`
+                    : "";
+
+                  return (
+                    <div key={reply._id} className="border-l-2 border-gray-200 pl-2">
+                      <p className="text-sm font-semibold text-gray-800">
+                        {replyAuthor}{" "}
+                        {reply.status === "flagged" && (
+                          <span className="ml-2 text-xs text-red-600 font-normal">
+                            [Flagged{replyFlaggedReason}]
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-gray-600 text-sm">{reply.content}</p>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {new Date(reply.createdAt).toLocaleString()} • ❤️ {reply.likes || 0}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
-          </p>
-
-          <p className="text-gray-600 text-sm">{c.content}</p>
-
-          <div className="text-xs text-gray-400 mt-1">
-            {c.createdAt
-              ? new Date(c.createdAt).toLocaleString()
-              : "No date"}{" "}
-            • ❤️ {c.likes ?? 0}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   </div>
 )}
+
 
     </div>
   );
