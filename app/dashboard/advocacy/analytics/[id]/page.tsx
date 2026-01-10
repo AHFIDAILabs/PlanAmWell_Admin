@@ -147,35 +147,41 @@ export default function ArticleAnalytics() {
         </div>
       )}
 
-      {/* Comments Section */}
-      {article.comments?.length > 0 && (
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="font-semibold mb-3">
-            Comments ({article.comments.length})
-          </h2>
+     {/* Comments Section */}
+{article.comments?.length > 0 && (
+  <div className="bg-white p-4 rounded shadow">
+    <h2 className="font-semibold mb-3">
+      Comments ({article.comments.length})
+    </h2>
 
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {article.comments.map((c: any) => (
-              <div key={c._id} className="border-b pb-2 last:border-none">
-                <p className="text-sm font-semibold text-gray-800">
-                  {c.author?.name || "Anonymous"}{" "}
-                  {c.status === "flagged" && (
-                    <span className="ml-2 text-xs text-red-600 font-normal">
-                      [Flagged: {c.flagReason}]
-                    </span>
-                  )}
-                </p>
+    <div className="space-y-3 max-h-80 overflow-y-auto">
+      {article.comments.map((c: any) => (
+        <div key={c._id} className="border-b pb-2 last:border-none">
+          <p className="text-sm font-semibold text-gray-800">
+            {c.author && typeof c.author === "object"
+              ? c.author.name || "Anonymous"
+              : "Anonymous"}{" "}
+            {c.status === "flagged" && (
+              <span className="ml-2 text-xs text-red-600 font-normal">
+                [Flagged: {c.flagReason}]
+              </span>
+            )}
+          </p>
 
-                <p className="text-gray-600 text-sm">{c.content}</p>
+          <p className="text-gray-600 text-sm">{c.content}</p>
 
-                <div className="text-xs text-gray-400 mt-1">
-                  {new Date(c.createdAt).toLocaleString()} • ❤️ {c.likes}
-                </div>
-              </div>
-            ))}
+          <div className="text-xs text-gray-400 mt-1">
+            {c.createdAt
+              ? new Date(c.createdAt).toLocaleString()
+              : "No date"}{" "}
+            • ❤️ {c.likes ?? 0}
           </div>
         </div>
-      )}
+      ))}
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
