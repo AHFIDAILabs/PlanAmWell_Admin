@@ -228,6 +228,24 @@ export const getPartnerStatsService = async () => {
   }
 };
 
+// ==================== ORDER SERVICES ====================
+export const getAllOrdersService = async () => {
+  const { data } = await adminApi.get("/admin/orders");
+  return data?.data || [];
+};
+
+export const refreshOrderDeliveryService = async (orderId: string) => {
+  const { data } = await adminApi.get(`/admin/orders/${orderId}/delivery`);
+  return data;
+};
+
+export const getCommissionReportService = async (year: number, month: number) => {
+  const { data } = await adminApi.get("/admin/reports/commission", {
+    params: { year, month },
+  });
+  return data?.data || [];
+};
+
 // ==================== UTILITY FUNCTIONS ====================
 export const isAdminAuthenticated = (): boolean => !!localStorage.getItem("token");
 

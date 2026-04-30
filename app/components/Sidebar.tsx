@@ -6,6 +6,7 @@ import {
   Stethoscope,
   FileText,
   Building2,
+  ShoppingBag,
   LogOut,
   ChevronDown,
   ChevronUp,
@@ -110,6 +111,14 @@ export default function Sidebar() {
               </button>
             </div>
           </div>
+
+          {/* Orders */}
+          <button
+            onClick={() => router.push("/dashboard/orders")}
+            className={menuButtonClasses}
+          >
+            <ShoppingBag size={18} /> Orders
+          </button>
 
           {/* Partners */}
           <button
