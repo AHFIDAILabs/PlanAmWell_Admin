@@ -163,7 +163,7 @@ export default function PartnerDetailsPage() {
             <AlertCircle className="text-red-600" size={24} />
             <div>
               <h3 className="text-red-700 font-semibold">Partner not found</h3>
-              <p className="text-red-600 text-sm">The partner ID "{partnerId}" does not exist.</p>
+              <p className="text-red-600 text-sm">The partner ID &quot;{partnerId}&quot; does not exist.</p>
             </div>
           </div>
           <button

@@ -103,7 +103,7 @@ export default function CreatePartnerPage() {
 
       // Debug: Log FormData contents
       console.log("=== FormData Contents ===");
-      for (let [key, value] of formDataToSend.entries()) {
+      for (const [key, value] of formDataToSend.entries()) {
         console.log(`${key}:`, value);
       }
 

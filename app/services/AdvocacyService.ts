@@ -85,7 +85,7 @@ export const adminCreateArticle = async (payload: any, file?: File) => {
   console.log("[adminCreateArticle] POST URL:", `${BASE}/advocacy/admin`);
   console.log("[adminCreateArticle] Headers:", headers);
   console.log("[adminCreateArticle] FormData entries:");
-  for (let pair of form.entries()) {
+  for (const pair of form.entries()) {
     console.log(pair[0], pair[1]);
   }
 

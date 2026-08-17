@@ -158,7 +158,7 @@ export const createPartnerService = async (formData: FormData) => {
     
     // Log what we're sending
     console.log("FormData entries:");
-    for (let [key, value] of formData.entries()) {
+    for (const [key, value] of formData.entries()) {
       console.log(`  ${key}:`, value);
     }
 
