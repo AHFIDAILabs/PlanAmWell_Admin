@@ -246,6 +246,17 @@ export const getCommissionReportService = async (year: number, month: number) =>
   return data?.data || [];
 };
 
+// ==================== PLATFORM SETTINGS ====================
+export const getPlatformSettingsService = async () => {
+  const { data } = await adminApi.get("/platform-settings");
+  return data?.data;
+};
+
+export const updatePlatformSettingsService = async (consultationFeeKobo: number) => {
+  const { data } = await adminApi.put("/platform-settings", { consultationFeeKobo });
+  return data?.data;
+};
+
 // ==================== UTILITY FUNCTIONS ====================
 export const isAdminAuthenticated = (): boolean => !!localStorage.getItem("token");
 

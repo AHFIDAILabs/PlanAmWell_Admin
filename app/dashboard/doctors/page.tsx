@@ -27,6 +27,13 @@ function specializationText(specialization: any) {
   return specialization || "N/A";
 }
 
+// Some doctor records only have firstName/lastName, not a combined `name` —
+// same fallback as useAllDoctors.ts's normalizeDoctor (used by the
+// Dashboard's PendingDoctors) and the doctor detail page.
+function doctorName(d: any) {
+  return d.name || `${d.firstName || ""} ${d.lastName || ""}`.trim() || "No Name";
+}
+
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +62,7 @@ export default function DoctorsPage() {
   const filteredDoctors = useMemo(() => {
     return doctors.filter((d) => {
       const matchesSearch =
-        d.name?.toLowerCase().includes(search.toLowerCase()) ||
+        doctorName(d).toLowerCase().includes(search.toLowerCase()) ||
         d.email?.toLowerCase().includes(search.toLowerCase()) ||
         specializationText(d.specialization).toLowerCase().includes(search.toLowerCase());
 
@@ -126,9 +133,9 @@ export default function DoctorsPage() {
                   >
                     <Td>
                       <div className="flex items-center gap-3">
-                        <AvatarInitials name={d.name || "?"} />
+                        <AvatarInitials name={doctorName(d)} />
                         <div>
-                          <p className="font-semibold text-on-surface">{d.name || "No Name"}</p>
+                          <p className="font-semibold text-on-surface">{doctorName(d)}</p>
                           <p className="text-xs text-on-surface-variant">{d.email}</p>
                         </div>
                       </div>

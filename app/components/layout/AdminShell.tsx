@@ -16,6 +16,7 @@ import {
   Bell,
   UserCircle,
   Search,
+  Settings,
 } from "lucide-react";
 import ThemeToggle from "../theme/ThemeToggle";
 
@@ -47,6 +48,7 @@ const NAV: NavItem[] = [
   },
   { label: "Orders", href: "/dashboard/orders", icon: ShoppingBag },
   { label: "Partners", href: "/dashboard/partners", icon: Building2 },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
