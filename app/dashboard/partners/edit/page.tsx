@@ -1,23 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { usePartner } from "../../../../hooks/usePartner";
-import { Partner } from "../../../../types/partner";
-import { 
-  ArrowLeft, 
-  Upload, 
-  X, 
-  Building2, 
-  User, 
-  Trash2, 
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { usePartner } from "../../../hooks/usePartner";
+import { Partner } from "../../../types/partner";
+import {
+  ArrowLeft,
+  Upload,
+  X,
+  Building2,
+  User,
+  Trash2,
   Save,
   ToggleLeft,
-  ToggleRight 
+  ToggleRight
 } from "lucide-react";
 
-export default function PartnerDetailPage() {
-  const params = useParams();
+function PartnerEdit() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { fetchPartnerById, updatePartner, togglePartnerStatus, deletePartner, loading } = usePartner();
 
@@ -43,8 +43,8 @@ export default function PartnerDetailPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Get partner ID from params
-  const partnerId = Array.isArray(params.id) ? params.id[0] : params.id;
+  // Get partner ID from the query string
+  const partnerId = searchParams.get("id");
 
   useEffect(() => {
     const loadPartner = async () => {
@@ -55,7 +55,7 @@ export default function PartnerDetailPage() {
         const data = await fetchPartnerById(partnerId);
         if (data) {
           setPartner(data);
-          
+
           // Populate form with partner data
           setFormData({
             name: data.name || "",
@@ -178,8 +178,8 @@ export default function PartnerDetailPage() {
     } catch (error: any) {
       console.error("Update partner error:", error);
       setSubmitError(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         "An error occurred while updating the partner"
       );
     }
@@ -572,5 +572,19 @@ export default function PartnerDetailPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function PartnerEditPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        </div>
+      }
+    >
+      <PartnerEdit />
+    </Suspense>
   );
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { adminUpdateArticle } from "../../../../services/AdvocacyService";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { adminUpdateArticle } from "../../../services/AdvocacyService";
 import axios from "axios";
 
-export default function EditArticlePage() {
-  const params = useParams();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id; // FIX
+function EditArticle() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
 
   const router = useRouter();
   const [form, setForm] = useState<any>(null);
@@ -118,5 +118,13 @@ export default function EditArticlePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function EditArticlePage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <EditArticle />
+    </Suspense>
   );
 }

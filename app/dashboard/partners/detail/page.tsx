@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { usePartnerContext } from "../../../context/PartnerContext";
 import { getPartnerByIdService, getPartnerOrdersService } from "../../../services/AdminService";
 import {
@@ -40,13 +40,13 @@ interface Order {
   createdAt?: string;
 }
 
-export default function PartnerDetailsPage() {
-  const params = useParams();
+function PartnerDetails() {
+  const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   // 1. Get global state from Context
   const { partners, loading: contextLoading, fetchAllPartners } = usePartnerContext();
-  
+
   // 2. Local states - ALL HOOKS MUST BE AT THE TOP
   const [partner, setPartner] = useState<Partner | null>(null);
   const [localLoading, setLocalLoading] = useState(true);
@@ -55,14 +55,14 @@ export default function PartnerDetailsPage() {
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<"overview" | "orders" | "commission">("overview");
 
-  const partnerId = typeof params.id === "string" ? params.id : params.id?.[0];
+  const partnerId = searchParams.get("id");
 
   // ✅ ALL useCallback and useEffect hooks BEFORE any conditional returns
-  
+
   // Fetch orders logic
   const fetchPartnerOrders = useCallback(async () => {
     if (!partnerId) return;
-    
+
     setLoadingOrders(true);
     setOrdersError(null);
     try {
@@ -119,7 +119,7 @@ export default function PartnerDetailsPage() {
       if (!contextLoading) {
         try {
           const fetchedPartner = await getPartnerByIdService(partnerId);
-          
+
           if (fetchedPartner) {
             setPartner(fetchedPartner);
           } else {
@@ -222,7 +222,7 @@ export default function PartnerDetailsPage() {
           </div>
 
           <button
-            onClick={() => router.push(`/dashboard/partners/${partnerId}/edit`)}
+            onClick={() => router.push(`/dashboard/partners/edit?id=${partnerId}`)}
             className="flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition shadow-sm"
           >
             <Edit size={18} />
@@ -412,5 +412,19 @@ export default function PartnerDetailsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function PartnerDetailsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        </div>
+      }
+    >
+      <PartnerDetails />
+    </Suspense>
   );
 }

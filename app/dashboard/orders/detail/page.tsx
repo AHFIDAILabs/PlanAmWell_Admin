@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, RefreshCw, Package, MapPin, CreditCard, Truck } from "lucide-react";
 import { getAllOrdersService, refreshOrderDeliveryService } from "../../../services/AdminService";
 
@@ -33,10 +33,10 @@ function InfoRow({ label, value }: { label: string; value?: string | number | nu
   );
 }
 
-export default function OrderDetailPage() {
+function OrderDetail() {
   const router = useRouter();
-  const params = useParams();
-  const orderId = params?.id as string;
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("id") ?? "";
 
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -246,5 +246,19 @@ export default function OrderDetailPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OrderDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600" />
+        </div>
+      }
+    >
+      <OrderDetail />
+    </Suspense>
   );
 }

@@ -200,7 +200,7 @@ export default function OrdersPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
-                      onClick={() => router.push(`/dashboard/orders/${order._id}`)}
+                      onClick={() => router.push(`/dashboard/orders/detail?id=${order._id}`)}
                       className="px-3 py-1 text-xs bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
                     >
                       View

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { getAllDoctors, updateDoctorStatusService } from "../../../services/AdminService";
 
 // Helper to safely display nested objects
@@ -16,8 +16,9 @@ const formatAvailability = (availability: any) => {
   });
 };
 
-export default function DoctorDetailPage() {
-  const { id } = useParams();
+function DoctorDetail() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   const router = useRouter();
   const [doctor, setDoctor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -160,5 +161,13 @@ export default function DoctorDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DoctorDetailPage() {
+  return (
+    <Suspense fallback={<p className="text-center text-pink-600 mt-20 animate-pulse">Loading doctor details...</p>}>
+      <DoctorDetail />
+    </Suspense>
   );
 }

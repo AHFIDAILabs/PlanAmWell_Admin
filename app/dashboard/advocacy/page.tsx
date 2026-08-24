@@ -63,7 +63,7 @@ return (
         >
           {/* Main Article Link */}
           <Link
-            href={`/dashboard/advocacy/${a.slug}`}
+            href={`/dashboard/advocacy/view?slug=${a.slug}`}
             className="block flex-1"
           >
             {a.featuredImage?.url && (
@@ -86,14 +86,14 @@ return (
           {/* Admin Actions */}
           <div className="absolute top-2 right-2 flex gap-2">
             <Link
-              href={`/dashboard/advocacy/edit/${a._id}`}
+              href={`/dashboard/advocacy/edit?id=${a._id}`}
               className="bg-white p-2 rounded-full shadow hover:bg-pink-50 transition-colors duration-200"
               title="Edit Article"
             >
               <Edit size={16} className="text-pink-600" />
             </Link>
             <Link
-              href={`/dashboard/advocacy/analytics/${a._id}`}
+              href={`/dashboard/advocacy/analytics/view?id=${a._id}`}
               className="bg-white p-2 rounded-full shadow hover:bg-pink-50 transition-colors duration-200"
               title="View Analytics"
             >

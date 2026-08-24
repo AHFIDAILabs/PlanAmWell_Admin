@@ -81,7 +81,7 @@ export default function PendingDoctors() {
               <td className="py-3 px-4 text-gray-500">{doc.availableDisplay}</td>
               <td className="py-3 px-4 flex space-x-2">
                 <button
-                  onClick={() => router.push(`/dashboard/doctors/${doc._id}`)}
+                  onClick={() => router.push(`/dashboard/doctors/detail?id=${doc._id}`)}
                   className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs font-semibold shadow transition"
                 >
                   👁️ View

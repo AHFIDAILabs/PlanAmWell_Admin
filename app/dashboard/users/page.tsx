@@ -50,7 +50,7 @@ export default function UsersPage() {
   if (error) return <p>Error loading users: {error}</p>;
 
   const handleCardClick = (id: string) =>
-    router.push(`/dashboard/users/${id}`);
+    router.push(`/dashboard/users/detail?id=${id}`);
 
   return (
     <div className="p-6">

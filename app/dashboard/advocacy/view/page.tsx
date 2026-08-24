@@ -1,22 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getArticleBySlug } from "../../../services/AdvocacyService";
 import { ArrowLeft } from "lucide-react";
 import NextLink from "next/link";
 
-export default function PublicArticleView() {
-  const { slug } = useParams();
+function PublicArticleView() {
+  const searchParams = useSearchParams();
+  const slug = searchParams.get("slug");
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
-    const articleSlug = Array.isArray(slug) ? slug[0] : slug; // ensure string
 
-    getArticleBySlug(articleSlug)
+    getArticleBySlug(slug)
       .then(res => setArticle(res))
       .catch(err => setError(err.response?.data?.message || err.message))
       .finally(() => setLoading(false));
@@ -43,7 +43,7 @@ export default function PublicArticleView() {
       </div>
 
     </div>
-    
+
     <div className="p-6 max-w-3xl mx-auto bg-white rounded shadow">
         <h1 className="text-2xl font-bold text-pink-600">{article.title}</h1>
         <p className="text-sm text-gray-500 mb-4">
@@ -54,5 +54,13 @@ export default function PublicArticleView() {
         )}
         <div dangerouslySetInnerHTML={{ __html: article.content }} />
       </div></>
+  );
+}
+
+export default function PublicArticleViewPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <PublicArticleView />
+    </Suspense>
   );
 }

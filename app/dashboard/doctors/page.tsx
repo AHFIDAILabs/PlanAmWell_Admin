@@ -54,7 +54,7 @@ export default function DoctorsPage() {
   if (error) return <p>Error loading doctors: {error}</p>;
 
   const handleCardClick = (id: string) =>
-    router.push(`/dashboard/doctors/${id}`);
+    router.push(`/dashboard/doctors/detail?id=${id}`);
 
   const getStatusColor = (status: string) => {
     switch (status) {

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getAllUsers } from "../../../services/AdminService";
 
-export default function UserDetailPage() {
-  const { id } = useParams();
+function UserDetail() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,5 +51,13 @@ export default function UserDetailPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function UserDetailPage() {
+  return (
+    <Suspense fallback={<p>Loading user details...</p>}>
+      <UserDetail />
+    </Suspense>
   );
 }

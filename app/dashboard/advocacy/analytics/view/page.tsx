@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getArticleStats } from "../../../../services/AdvocacyService";
 import { Bar } from "react-chartjs-2";
 import {
@@ -16,9 +16,9 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export default function ArticleAnalytics() {
-  const params = useParams();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+function ArticleAnalytics() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
 
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -230,5 +230,13 @@ export default function ArticleAnalytics() {
 
 
     </div>
+  );
+}
+
+export default function ArticleAnalyticsPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center text-gray-500">Loading analytics...</div>}>
+      <ArticleAnalytics />
+    </Suspense>
   );
 }

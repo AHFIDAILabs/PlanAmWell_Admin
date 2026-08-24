@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import axios from "axios";
 
-export default function AdminArticleView() {
-  const { id } = useParams();
+function AdminArticleView() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   const [article, setArticle] = useState<any>(null);
 
   useEffect(() => {
@@ -25,5 +26,13 @@ export default function AdminArticleView() {
       <img src={article.featuredImage} alt="" className="w-full rounded-md mb-4" />
       <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
     </div>
+  );
+}
+
+export default function AdminArticleViewPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <AdminArticleView />
+    </Suspense>
   );
 }

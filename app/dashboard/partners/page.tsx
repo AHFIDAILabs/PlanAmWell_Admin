@@ -214,14 +214,14 @@ export default function PartnersListPage() {
               {/* Actions */}
               <div className="flex gap-2 pt-4 border-t border-gray-100">
                 <button
-                  onClick={() => router.push(`/dashboard/partners/${partner._id}`)}
+                  onClick={() => router.push(`/dashboard/partners/detail?id=${partner._id}`)}
                   className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm"
                 >
                   <Eye size={16} />
                   View
                 </button>
                 <button
-                  onClick={() => router.push(`/dashboard/partners/${partner._id}/edit`)}
+                  onClick={() => router.push(`/dashboard/partners/edit?id=${partner._id}`)}
                   className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition text-sm"
                 >
                   <Edit size={16} />
