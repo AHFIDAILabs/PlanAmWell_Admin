@@ -11,13 +11,13 @@ import {
   Legend,
 } from "recharts";
 import { useCombinedGrowth } from "../hooks/useCombinedGrowth";
+import { Card } from "./ui/Card";
 
 export default function GrowthStackedBarChart() {
   const { growthData, loading, error } = useCombinedGrowth(3);
 
   if (loading || error || !growthData) return null;
 
-  // Prepare weekly data: each week has users and doctors counts
   const data =
     growthData?.weeklyGrowth?.map((w: any) => ({
       week: w.label,
@@ -26,25 +26,29 @@ export default function GrowthStackedBarChart() {
     })) || [];
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-      <h3 className="font-semibold text-lg mb-4">
-        Weekly Users & Doctors
-      </h3>
+    <Card>
+      <h3 className="mb-4 text-lg font-semibold text-on-surface">Weekly Users &amp; Doctors</h3>
 
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="week" tick={{ fill: "#6b7280" }} />
-          <YAxis tick={{ fill: "#6b7280" }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-surface-variant)" />
+          <XAxis dataKey="week" tick={{ fill: "var(--color-on-surface-variant)" }} />
+          <YAxis tick={{ fill: "var(--color-on-surface-variant)" }} />
           <Tooltip
             formatter={(value: any, name: string) => [value.toLocaleString(), name]}
+            contentStyle={{
+              background: "var(--color-surface-container-lowest)",
+              border: "1px solid var(--color-surface-variant)",
+              borderRadius: 12,
+              color: "var(--color-on-surface)",
+            }}
+            labelStyle={{ color: "var(--color-on-surface)" }}
           />
-          <Legend />
-          {/* Stacked bars */}
-          <Bar dataKey="Users" stackId="a" fill="#ec4899" radius={[6, 6, 0, 0]} />
-          <Bar dataKey="Doctors" stackId="a" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+          <Legend wrapperStyle={{ color: "var(--color-on-surface-variant)" }} />
+          <Bar dataKey="Users" stackId="a" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="Doctors" stackId="a" fill="var(--color-tertiary)" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </Card>
   );
 }

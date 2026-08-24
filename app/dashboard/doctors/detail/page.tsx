@@ -3,18 +3,46 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getAllDoctors, updateDoctorStatusService } from "../../../services/AdminService";
+import { Card } from "../../../components/ui/Card";
+import { Badge } from "../../../components/ui/Badge";
+import { Button } from "../../../components/ui/Button";
+import { Modal } from "../../../components/ui/Modal";
+import { Table, Thead, Tbody, Tr, Th, Td, AvatarInitials } from "../../../components/ui/Table";
+import { ArrowLeft, Mail, Phone, BadgeCheck, Briefcase, Calendar } from "lucide-react";
 
-// Helper to safely display nested objects
+const STATUS_TONE: Record<string, "success" | "warning" | "error" | "neutral"> = {
+  approved: "success",
+  submitted: "warning",
+  reviewing: "warning",
+  rejected: "error",
+};
+
 const formatAvailability = (availability: any) => {
-  if (!availability) return "N/A";
+  if (!availability) return [];
   return Object.entries(availability).map(([day, hours]: [string, any]) => {
     const hoursText =
-      typeof hours === "string" ? hours :
-      hours?.from && hours?.to ? `${hours.from} - ${hours.to}` :
-      JSON.stringify(hours);
+      typeof hours === "string"
+        ? hours
+        : hours?.from && hours?.to
+        ? `${hours.from} - ${hours.to}`
+        : JSON.stringify(hours);
     return { day, hoursText };
   });
 };
+
+function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-tertiary-container/10 text-tertiary-container">
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">{label}</p>
+        <p className="text-sm text-on-surface break-words">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 function DoctorDetail() {
   const searchParams = useSearchParams();
@@ -24,6 +52,7 @@ function DoctorDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"approved" | "rejected" | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -33,7 +62,6 @@ function DoctorDetail() {
         const data = await getAllDoctors();
         const doc = data.find((d: any) => d._id === id);
         if (doc) {
-          // Flatten and normalize fields for safe rendering
           setDoctor({
             ...doc,
             fullName: doc.name || `${doc.firstName || ""} ${doc.lastName || ""}`.trim() || "No Name",
@@ -41,7 +69,6 @@ function DoctorDetail() {
               ? doc.specialization.join(", ")
               : doc.specialization || "N/A",
             availabilityDisplay: formatAvailability(doc.availability),
-            createdAtDisplay: doc.createdAt ? new Date(doc.createdAt).toLocaleString() : "N/A",
           });
         }
       } catch (err: any) {
@@ -54,25 +81,17 @@ function DoctorDetail() {
     fetchDoctor();
   }, [id]);
 
-  if (loading) return <p className="text-center text-pink-600 mt-20 animate-pulse">Loading doctor details...</p>;
-  if (error) return <p className="text-center text-red-600 mt-20">{error}</p>;
-  if (!doctor) return <p className="text-center mt-20">Doctor not found.</p>;
+  if (loading) return <p className="text-on-surface-variant">Loading doctor details...</p>;
+  if (error) return <p className="text-error">{error}</p>;
+  if (!doctor) return <p className="text-on-surface-variant">Doctor not found.</p>;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved": return "bg-green-100 text-green-800";
-      case "submitted": case "reviewing": return "bg-yellow-100 text-yellow-800";
-      case "rejected": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const handleStatusUpdate = async (status: "approved" | "rejected") => {
-    if (!doctor) return;
+  const handleConfirm = async () => {
+    if (!confirmAction) return;
     try {
       setUpdating(true);
-      await updateDoctorStatusService(doctor._id, status);
-      setDoctor({ ...doctor, status });
+      await updateDoctorStatusService(doctor._id, confirmAction);
+      setDoctor({ ...doctor, status: confirmAction });
+      setConfirmAction(null);
     } catch (err: any) {
       alert(err.message || "Failed to update status");
     } finally {
@@ -80,93 +99,117 @@ function DoctorDetail() {
     }
   };
 
-  const imageSrc =
-    doctor.profileImage ||
-    doctor.doctorImage?.url ||
-    "/default-avatar.png";
-
   return (
-    <div className="p-6 flex justify-center">
-      <div className="max-w-2xl w-full bg-white shadow-2xl rounded-2xl p-8 space-y-6 transform hover:scale-105 transition duration-300">
-        <div className="flex items-center space-x-6">
-          <img
-            src={imageSrc}
-            alt={doctor.fullName}
-            className="w-24 h-24 rounded-full object-cover border-2 border-pink-600"
-          />
+    <div className="space-y-6">
+      <button
+        onClick={() => router.push("/dashboard/doctors")}
+        className="inline-flex items-center gap-1 text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary"
+      >
+        <ArrowLeft size={16} /> Back to Doctors
+      </button>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <AvatarInitials name={doctor.fullName} className="h-16 w-16 text-lg" />
           <div>
-            <h1 className="text-3xl font-bold text-pink-600">{doctor.fullName}</h1>
-            <span className={`inline-block px-4 py-2 rounded-full font-medium ${getStatusColor(doctor.status)}`}>
-              {doctor.status.toUpperCase()}
-            </span>
+            <h1 className="text-2xl font-bold text-on-surface">{doctor.fullName}</h1>
+            <Badge tone={STATUS_TONE[doctor.status] || "neutral"} className="mt-1">
+              {doctor.status ? doctor.status.charAt(0).toUpperCase() + doctor.status.slice(1) : "Unknown"}
+            </Badge>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-          <p><strong>Email:</strong> {doctor.email || "N/A"}</p>
-          <p><strong>License Number:</strong> {doctor.licenseNumber || "N/A"}</p>
-          <p><strong>Specialization:</strong> {doctor.specializationDisplay}</p>
-          <p><strong>Years of Experience:</strong> {doctor.yearsOfExperience ?? "N/A"}</p>
-          <p><strong>Contact Number:</strong> {doctor.contactNumber || "N/A"}</p>
-          <p><strong>Joined At:</strong> {doctor.createdAtDisplay}</p>
-          <p className="sm:col-span-2"><strong>Bio:</strong> {doctor.bio || "N/A"}</p>
-
-          <div className="sm:col-span-2">
-            <strong>Availability:</strong>
-            {doctor.availabilityDisplay?.length ? (
-              <div className="overflow-x-auto mt-2">
-                <table className="min-w-full border border-gray-200 rounded-lg text-gray-700">
-                  <thead className="bg-pink-100">
-                    <tr>
-                      <th className="py-2 px-4 border-b text-left">Day</th>
-                      <th className="py-2 px-4 border-b text-left">Hours</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {doctor.availabilityDisplay.map((a: any) => (
-                      <tr key={a.day} className="hover:bg-pink-50 transition-colors">
-                        <td className="py-2 px-4 border-b capitalize">{a.day}</td>
-                        <td className="py-2 px-4 border-b">{a.hoursText}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p>N/A</p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={() => handleStatusUpdate("approved")}
+        <div className="flex gap-3">
+          <Button
+            variant="tertiary"
             disabled={updating || doctor.status === "approved"}
-            className={`flex-1 py-2 px-4 rounded-xl text-white font-semibold transition-colors mr-4 ${
-              doctor.status === "approved" ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-500"
-            }`}
+            onClick={() => setConfirmAction("approved")}
           >
-            ✅ Approve
-          </button>
-
-          <button
-            onClick={() => handleStatusUpdate("rejected")}
+            Approve
+          </Button>
+          <Button
+            variant="danger"
             disabled={updating || doctor.status === "rejected"}
-            className={`flex-1 py-2 px-4 rounded-xl text-white font-semibold transition-colors ${
-              doctor.status === "rejected" ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-500"
-            }`}
+            onClick={() => setConfirmAction("rejected")}
           >
-            ❌ Reject
-          </button>
+            Reject
+          </Button>
         </div>
       </div>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <DetailRow icon={<Mail size={18} />} label="Email" value={doctor.email || "N/A"} />
+        <DetailRow icon={<BadgeCheck size={18} />} label="License Number" value={doctor.licenseNumber || "N/A"} />
+        <DetailRow icon={<Briefcase size={18} />} label="Specialization" value={doctor.specializationDisplay} />
+        <DetailRow icon={<Briefcase size={18} />} label="Years of Experience" value={doctor.yearsOfExperience ?? "N/A"} />
+        <DetailRow icon={<Phone size={18} />} label="Contact Number" value={doctor.contactNumber || "N/A"} />
+        <DetailRow
+          icon={<Calendar size={18} />}
+          label="Joined At"
+          value={doctor.createdAt ? new Date(doctor.createdAt).toLocaleDateString() : "N/A"}
+        />
+      </div>
+
+      {doctor.bio && (
+        <Card>
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-on-surface-variant">Bio</h3>
+          <p className="text-sm text-on-surface">{doctor.bio}</p>
+        </Card>
+      )}
+
+      <Card padding={doctor.availabilityDisplay.length === 0}>
+        <h3 className="mb-2 px-6 pt-6 text-lg font-semibold text-on-surface">Availability</h3>
+        {doctor.availabilityDisplay.length ? (
+          <Table>
+            <Thead>
+              <Tr>
+                <Th>Day</Th>
+                <Th>Hours</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {doctor.availabilityDisplay.map((a: any) => (
+                <Tr key={a.day}>
+                  <Td className="capitalize">{a.day}</Td>
+                  <Td className="text-on-surface-variant">{a.hoursText}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        ) : (
+          <p className="px-6 pb-6 text-sm text-on-surface-variant">No availability on file.</p>
+        )}
+      </Card>
+
+      <Modal
+        open={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        title={confirmAction === "approved" ? "Approve this doctor?" : "Reject this doctor?"}
+      >
+        <p className="mb-6 text-sm text-on-surface-variant">
+          You are about to mark <strong>{doctor.fullName}</strong> as{" "}
+          <strong>{confirmAction === "approved" ? "Approved" : "Rejected"}</strong>. This updates their status
+          immediately.
+        </p>
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setConfirmAction(null)} disabled={updating}>
+            Cancel
+          </Button>
+          <Button
+            variant={confirmAction === "approved" ? "tertiary" : "danger"}
+            onClick={handleConfirm}
+            disabled={updating}
+          >
+            {updating ? "Saving..." : "Confirm"}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
 
 export default function DoctorDetailPage() {
   return (
-    <Suspense fallback={<p className="text-center text-pink-600 mt-20 animate-pulse">Loading doctor details...</p>}>
+    <Suspense fallback={<p className="text-on-surface-variant">Loading doctor details...</p>}>
       <DoctorDetail />
     </Suspense>
   );

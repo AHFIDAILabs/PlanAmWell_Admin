@@ -3,13 +3,29 @@
 import { useState, useEffect, useMemo } from "react";
 import { getAllDoctors } from "../../services/AdminService";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
+import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
+import { Select } from "../../components/ui/Select";
+import { Badge } from "../../components/ui/Badge";
+import { Pagination } from "../../components/ui/Pagination";
+import { Table, Thead, Tbody, Tr, Th, Td, AvatarInitials } from "../../components/ui/Table";
 
-type StatusFilter =
-  | "all"
-  | "approved"
-  | "submitted"
-  | "reviewing"
-  | "rejected";
+type StatusFilter = "all" | "approved" | "submitted" | "reviewing" | "rejected";
+
+const PAGE_SIZE = 10;
+
+const STATUS_TONE: Record<string, "success" | "warning" | "error" | "neutral"> = {
+  approved: "success",
+  submitted: "warning",
+  reviewing: "warning",
+  rejected: "error",
+};
+
+function specializationText(specialization: any) {
+  if (Array.isArray(specialization)) return specialization.join(", ") || "N/A";
+  return specialization || "N/A";
+}
 
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -17,8 +33,8 @@ export default function DoctorsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [page, setPage] = useState(1);
 
   const router = useRouter();
 
@@ -41,103 +57,105 @@ export default function DoctorsPage() {
       const matchesSearch =
         d.name?.toLowerCase().includes(search.toLowerCase()) ||
         d.email?.toLowerCase().includes(search.toLowerCase()) ||
-        d.specialization?.toLowerCase().includes(search.toLowerCase());
+        specializationText(d.specialization).toLowerCase().includes(search.toLowerCase());
 
-      const matchesStatus =
-        statusFilter === "all" || d.status === statusFilter;
+      const matchesStatus = statusFilter === "all" || d.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
   }, [doctors, search, statusFilter]);
 
-  if (loading) return <p>Loading doctors...</p>;
-  if (error) return <p>Error loading doctors: {error}</p>;
+  const totalPages = Math.max(1, Math.ceil(filteredDoctors.length / PAGE_SIZE));
+  const pagedDoctors = filteredDoctors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const handleCardClick = (id: string) =>
-    router.push(`/dashboard/doctors/detail?id=${id}`);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "submitted":
-      case "reviewing":
-        return "bg-yellow-100 text-yellow-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter]);
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 text-pink-600">
-        All Doctors
-      </h1>
-
-      {/* Search & Filter */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search by name, email, or specialization..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-2/3 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-pink-400 outline-none"
-        />
-
-        <select
-          value={statusFilter}
-          onChange={(e) =>
-            setStatusFilter(e.target.value as StatusFilter)
-          }
-          className="w-full sm:w-1/3 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-pink-400 outline-none"
-        >
-          <option value="all">All Statuses</option>
-          <option value="approved">Approved</option>
-          <option value="reviewing">Reviewing</option>
-          <option value="submitted">Submitted</option>
-          <option value="rejected">Rejected</option>
-        </select>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-on-surface">Doctors</h1>
+        <p className="mt-1 text-on-surface-variant">Review and manage doctor credentials and approval status.</p>
       </div>
 
-      {/* Doctors Grid */}
-      {filteredDoctors.length === 0 ? (
-        <p className="text-gray-500">No doctors found.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDoctors.map((d) => (
-            <div
-              key={d._id}
-              onClick={() => handleCardClick(d._id)}
-              className="bg-white shadow-lg rounded-xl p-5 cursor-pointer transform hover:-translate-y-1 hover:shadow-2xl transition duration-300"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xl font-semibold">{d.name}</h2>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                    d.status
-                  )}`}
-                >
-                  {d.status.toUpperCase()}
-                </span>
-              </div>
-
-              <p className="text-gray-600 mb-1">
-                <strong>Email:</strong> {d.email}
-              </p>
-              <p className="text-gray-600 mb-1">
-                <strong>Specialization:</strong>{" "}
-                {d.specialization || "N/A"}
-              </p>
-              <p className="text-gray-500 text-sm">
-                <strong>Joined:</strong>{" "}
-                {new Date(d.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-          ))}
+      <Card className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <Input
+            icon={<Search size={18} />}
+            placeholder="Search by name, email, or specialization..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-      )}
+        <div className="w-full sm:w-56">
+          <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}>
+            <option value="all">All Statuses</option>
+            <option value="approved">Approved</option>
+            <option value="reviewing">Reviewing</option>
+            <option value="submitted">Submitted</option>
+            <option value="rejected">Rejected</option>
+          </Select>
+        </div>
+      </Card>
+
+      <Card padding={false}>
+        {loading ? (
+          <p className="p-6 text-on-surface-variant">Loading doctors...</p>
+        ) : error ? (
+          <p className="p-6 text-error">Error loading doctors: {error}</p>
+        ) : filteredDoctors.length === 0 ? (
+          <p className="p-6 text-on-surface-variant">No doctors found.</p>
+        ) : (
+          <>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Doctor</Th>
+                  <Th>Specialization</Th>
+                  <Th>Joined</Th>
+                  <Th>Status</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {pagedDoctors.map((d) => (
+                  <Tr
+                    key={d._id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/dashboard/doctors/detail?id=${d._id}`)}
+                  >
+                    <Td>
+                      <div className="flex items-center gap-3">
+                        <AvatarInitials name={d.name || "?"} />
+                        <div>
+                          <p className="font-semibold text-on-surface">{d.name || "No Name"}</p>
+                          <p className="text-xs text-on-surface-variant">{d.email}</p>
+                        </div>
+                      </div>
+                    </Td>
+                    <Td className="text-on-surface-variant">{specializationText(d.specialization)}</Td>
+                    <Td className="text-on-surface-variant">
+                      {d.createdAt ? new Date(d.createdAt).toLocaleDateString() : "—"}
+                    </Td>
+                    <Td>
+                      <Badge tone={STATUS_TONE[d.status] || "neutral"}>
+                        {d.status ? d.status.charAt(0).toUpperCase() + d.status.slice(1) : "Unknown"}
+                      </Badge>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              totalItems={filteredDoctors.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+            />
+          </>
+        )}
+      </Card>
     </div>
   );
 }

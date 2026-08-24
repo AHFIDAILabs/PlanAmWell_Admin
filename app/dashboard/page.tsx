@@ -18,8 +18,10 @@ export default function DashboardPage() {
         <DoctorStatusChart />
       </div>
 
-      {/* Activity Section */}
-      <div className="grid grid-row-1 lg:grid-row-2 gap-6">
+      {/* Activity Section — PendingDoctors is a full data table (5 cols +
+          row actions), so it stays full-width rather than squeezed into a
+          half-width column next to RecentUsers's simple list. */}
+      <div className="space-y-6">
         <RecentUsers />
         <PendingDoctors />
       </div>

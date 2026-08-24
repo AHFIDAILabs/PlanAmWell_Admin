@@ -8,14 +8,24 @@ import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Admin Dashboard",
-  description: "Dashboard for Plan Am Well",
+  title: "PlanAmWell Admin",
+  description: "Admin back-office for PlanAmWell",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <script
+          // Runs before paint to apply a saved dark-mode choice immediately,
+          // avoiding a light-then-dark flash on load. See ThemeToggle.tsx.
+          dangerouslySetInnerHTML={{
+            __html: `try {
+              var t = localStorage.getItem('admin-theme');
+              if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+            } catch (e) {}`,
+          }}
+        />
         <ThemeProvider>
            {/* Remove PartnerProvider from here */}
            {children}

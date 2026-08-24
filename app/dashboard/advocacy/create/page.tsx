@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
-import TextAlign from "@tiptap/extension-text-align";
-import { TextStyle } from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
 import { adminCreateArticle } from "../../../services/AdvocacyService";
+import ArticleEditor from "../../../components/advocacy/ArticleEditor";
+import { Card } from "../../../components/ui/Card";
+import { Input } from "../../../components/ui/Input";
+import { Textarea } from "../../../components/ui/Textarea";
+import { Button } from "../../../components/ui/Button";
+import { ArrowLeft, Upload } from "lucide-react";
 
 export default function CreateArticlePage() {
   const router = useRouter();
@@ -20,400 +18,145 @@ export default function CreateArticlePage() {
     content: "",
     category: "",
     tags: "",
+    slug: "",
     partner: "",
-    status: "draft",
     featured: false,
   });
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState<"draft" | "published" | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const editor = useEditor({
-    immediatelyRender: false, // Fix SSR
-    extensions: [
-      StarterKit,
-      Underline,
-      Link.configure({ openOnClick: false }),
-      Image,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      TextStyle,
-      Color,
-    ],
-    content: form.content,
-    onUpdate: ({ editor }) => {
-      setForm((prev: any) => ({ ...prev, content: editor.getHTML() }));
-    },
-    editorProps: {
-      attributes: {
-        class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[300px] p-4",
-      },
-    },
-  });
-
- // handleSubmit
-const handleSubmit = async () => {
-  setLoading(true);
-  try {
-    const tagsArray = form.tags
-      ? form.tags.split(",").map((t: string) => t.trim())
-      : [];
-
-    const payload = {
-      title: form.title,
-      excerpt: form.excerpt,
-      content: form.content,
-      category: form.category,
-      tags: tagsArray,
-      slug: form.slug || '',
-      status: form.status,
-      featured: !!form.featured,
-      author: { name: form.partner || "Partner" }, // <-- set as object
-    };
-
-    await adminCreateArticle(payload, file || undefined);
-    router.push("/dashboard/advocacy");
-  } catch (err: any) {
-    alert(err.message || "Failed to create article");
-  } finally {
-    setLoading(false);
-  }
-};
-
-  const addImage = () => {
-    const url = window.prompt("Enter image URL:");
-    if (url && editor) editor.chain().focus().setImage({ src: url }).run();
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFile(f);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(f);
   };
 
-  const addLink = () => {
-    const url = window.prompt("Enter URL:");
-    if (url && editor) editor.chain().focus().setLink({ href: url }).run();
-  };
+  const handleSubmit = async (status: "draft" | "published") => {
+    setSaving(status);
+    setError(null);
+    try {
+      const tagsArray = form.tags ? form.tags.split(",").map((t: string) => t.trim()) : [];
 
-  if (!editor) {
-    return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="bg-white p-6 rounded-xl shadow">
-            <div className="space-y-4">
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+      const payload = {
+        title: form.title,
+        excerpt: form.excerpt,
+        content: form.content,
+        category: form.category,
+        tags: tagsArray,
+        slug: form.slug || "",
+        status,
+        featured: !!form.featured,
+        author: { name: form.partner || "Partner" },
+      };
+
+      await adminCreateArticle(payload, file || undefined);
+      router.push("/dashboard/advocacy");
+    } catch (err: any) {
+      setError(err.message || "Failed to create article");
+    } finally {
+      setSaving(null);
+    }
+  };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-pink-600 mb-4">Create Article</h1>
-
-      <div className="space-y-4 bg-white p-6 rounded-xl shadow">
-        {/* TITLE */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Title
-          </label>
-          <input
-            placeholder="Enter article title"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* PARTNER */}
-<div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Partner Name
-  </label>
-  <input
-    placeholder="Partner organization name"
-    value={form.partner}  // <-- use form.partner, not form.author.name
-    onChange={(e) => setForm({ ...form, partner: e.target.value })}
-    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-  />
-</div>
-
-
-        {/* CATEGORY + TAGS + SLUG */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <input
-              placeholder="e.g., Health, Education"
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tags
-            </label>
-            <input
-              placeholder="tag1, tag2, tag3"
-              value={form.tags}
-              onChange={(e) => setForm({ ...form, tags: e.target.value })}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Slug
-            </label>
-            <input
-              placeholder="slug"
-              value={form.slug}
-              onChange={(e) => setForm({ ...form, slug: e.target.value })}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* EXCERPT */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Excerpt
-          </label>
-          <textarea
-            placeholder="Brief summary of the article (150-200 characters)"
-            value={form.excerpt}
-            onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-            rows={3}
-          />
-        </div>
-
-        {/* CONTENT */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content
-          </label>
-
-          {/* Toolbar */}
-          <div className="border border-gray-300 rounded-t-lg bg-gray-50 p-2 flex flex-wrap gap-1">
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("bold") ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              <strong>B</strong>
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("italic") ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              <em>I</em>
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("underline") ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              <u>U</u>
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("strike") ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              <s>S</s>
-            </button>
-
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("heading", { level: 1 }) ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              H1
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("heading", { level: 2 }) ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              H2
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("heading", { level: 3 }) ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              H3
-            </button>
-
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("bulletList") ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              • List
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("orderedList") ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              1. List
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleBlockquote().run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive("blockquote") ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              &ldquo;Quote&rdquo;
-            </button>
-
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().setTextAlign("left").run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive({ textAlign: "left" }) ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              ⬅
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().setTextAlign("center").run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive({ textAlign: "center" }) ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              ↔
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().setTextAlign("right").run()}
-              className={`px-3 py-1 rounded ${
-                editor.isActive({ textAlign: "right" }) ? "bg-pink-200" : "bg-white"
-              } border hover:bg-gray-100`}
-            >
-              ➡
-            </button>
-
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-
-            <button
-              type="button"
-              onClick={addLink}
-              className="px-3 py-1 rounded bg-white border hover:bg-gray-100"
-            >
-              🔗 Link
-            </button>
-            <button
-              type="button"
-              onClick={addImage}
-              className="px-3 py-1 rounded bg-white border hover:bg-gray-100"
-            >
-              🖼 Image
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().setHorizontalRule().run()}
-              className="px-3 py-1 rounded bg-white border hover:bg-gray-100"
-            >
-              ―
-            </button>
-          </div>
-
-          {/* Editor */}
-          <div className="border border-t-0 border-gray-300 rounded-b-lg bg-white">
-            <EditorContent editor={editor} />
-          </div>
-        </div>
-
-        {/* FEATURED + STATUS + IMAGE */}
-        <div className="flex flex-wrap gap-4 items-center pt-4 border-t">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.featured}
-              onChange={(e) => setForm({ ...form, featured: e.target.checked })}
-              className="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
-            />
-            <span className="text-sm font-medium text-gray-700">Featured Article</span>
-          </label>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
-              className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-lg file:border-0
-                file:text-sm file:font-semibold
-                file:bg-pink-50 file:text-pink-700
-                hover:file:bg-pink-100
-                cursor-pointer"
-            />
-          </div>
-        </div>
-
-        {/* ACTION BUTTONS */}
-        <div className="flex gap-3 mt-6 pt-4 border-t">
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-          >
-            {loading ? "Saving..." : "Save Article"}
-          </button>
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="px-6 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container-high"
           >
-            Cancel
+            <ArrowLeft size={20} />
           </button>
+          <h1 className="text-xl font-bold text-primary">New Article</h1>
         </div>
+        <div className="flex gap-3">
+          <Button variant="outline" disabled={!!saving} onClick={() => handleSubmit("draft")}>
+            {saving === "draft" ? "Saving..." : "Save Draft"}
+          </Button>
+          <Button disabled={!!saving} onClick={() => handleSubmit("published")}>
+            {saving === "published" ? "Publishing..." : "Publish"}
+          </Button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-2xl border border-error-container bg-error-container px-4 py-3 text-sm text-on-error-container">
+          {error}
+        </div>
+      )}
+
+      <Card className="space-y-4">
+        <input
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          placeholder="Enter article title here..."
+          className="w-full border-none bg-transparent p-0 text-4xl font-bold text-on-surface outline-none placeholder:text-outline"
+        />
+
+        {imagePreview ? (
+          <div className="relative h-56 overflow-hidden rounded-2xl">
+            <img src={imagePreview} alt="Cover" className="h-full w-full object-cover" />
+            <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 cursor-pointer opacity-0" />
+          </div>
+        ) : (
+          <label className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-surface-variant bg-surface-container-low transition-colors hover:bg-surface-container">
+            <Upload size={32} className="mb-2 text-outline" />
+            <span className="font-semibold text-on-surface-variant">Upload Cover Image</span>
+            <span className="mt-1 text-xs text-outline">1200 x 630px recommended</span>
+            <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+          </label>
+        )}
+      </Card>
+
+      <Card className="space-y-4">
+        <Input
+          label="Partner Name"
+          placeholder="Partner organization name"
+          value={form.partner}
+          onChange={(e) => setForm({ ...form, partner: e.target.value })}
+        />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Input
+            label="Category"
+            placeholder="e.g., Health, Education"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+          />
+          <Input
+            label="Tags"
+            placeholder="tag1, tag2, tag3"
+            value={form.tags}
+            onChange={(e) => setForm({ ...form, tags: e.target.value })}
+          />
+          <Input label="Slug" placeholder="slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+        </div>
+        <Textarea
+          label="Excerpt"
+          placeholder="Brief summary of the article (150-200 characters)"
+          value={form.excerpt}
+          onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+          rows={3}
+        />
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={form.featured}
+            onChange={(e) => setForm({ ...form, featured: e.target.checked })}
+            className="h-5 w-5 rounded border-outline text-primary focus:ring-primary"
+          />
+          <span className="text-sm font-semibold text-on-surface">Featured Article</span>
+        </label>
+      </Card>
+
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-on-surface">Content</label>
+        <ArticleEditor content={form.content} onChange={(html) => setForm((prev: any) => ({ ...prev, content: html }))} />
       </div>
     </div>
   );

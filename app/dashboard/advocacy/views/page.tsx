@@ -1,37 +1,72 @@
 "use client";
+
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import axios from "axios";
+import { useSearchParams, useRouter } from "next/navigation";
+import { adminGetAllArticles } from "../../../services/AdvocacyService";
+import { ArrowLeft, Edit } from "lucide-react";
+import { Card } from "../../../components/ui/Card";
+import { Badge } from "../../../components/ui/Badge";
+import { Button } from "../../../components/ui/Button";
+
+const STATUS_TONE: Record<string, "success" | "warning" | "neutral" | "info"> = {
+  published: "success",
+  draft: "neutral",
+  scheduled: "info",
+};
 
 function AdminArticleView() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const id = searchParams.get("id");
   const [article, setArticle] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
-    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/advocacy/admin/all`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-    }).then(res => {
-      setArticle(res.data.data.find((x:any)=> x._id === id));
-    });
+    adminGetAllArticles()
+      .then((res) => setArticle(res.data.find((x: any) => x._id === id)))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  if (!article) return <div className="p-6">Loading...</div>;
+  if (loading) return <p className="text-on-surface-variant">Loading...</p>;
+  if (!article) return <p className="text-on-surface-variant">Article not found.</p>;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white rounded-xl shadow">
-      <h1 className="text-3xl font-bold text-pink-600 mb-2">{article.title}</h1>
-      <p className="text-sm text-gray-500 mb-4">{article.partner ? `By ${article.partner}` : "Partner: N/A"}</p>
-      <img src={article.featuredImage} alt="" className="w-full rounded-md mb-4" />
-      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => router.push("/dashboard/advocacy")}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary"
+        >
+          <ArrowLeft size={18} /> Back
+        </button>
+        <Button variant="outline" onClick={() => router.push(`/dashboard/advocacy/edit?id=${id}`)}>
+          <Edit size={16} /> Edit Article
+        </Button>
+      </div>
+
+      <Card>
+        <div className="mb-4 flex items-center gap-3">
+          <Badge tone={STATUS_TONE[article.status] || "neutral"} className="capitalize">
+            {article.status || "draft"}
+          </Badge>
+          <span className="text-sm text-on-surface-variant">
+            {article.partner ? `By ${article.partner}` : article.author?.name ? `By ${article.author.name}` : "Partner: N/A"}
+          </span>
+        </div>
+        <h1 className="mb-6 text-3xl font-bold text-on-surface">{article.title}</h1>
+        {article.featuredImage?.url && (
+          <img src={article.featuredImage.url} alt="" className="mb-6 w-full rounded-2xl object-cover" />
+        )}
+        <div className="prose prose-sm sm:prose max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
+      </Card>
     </div>
   );
 }
 
 export default function AdminArticleViewPage() {
   return (
-    <Suspense fallback={<div className="p-6">Loading...</div>}>
+    <Suspense fallback={<p className="text-on-surface-variant">Loading...</p>}>
       <AdminArticleView />
     </Suspense>
   );

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { getArticleBySlug } from "../../../services/AdvocacyService";
 import { ArrowLeft } from "lucide-react";
 import NextLink from "next/link";
+import { Card } from "../../../components/ui/Card";
 
 function PublicArticleView() {
   const searchParams = useSearchParams();
@@ -17,49 +18,48 @@ function PublicArticleView() {
     if (!slug) return;
 
     getArticleBySlug(slug)
-      .then(res => setArticle(res))
-      .catch(err => setError(err.response?.data?.message || err.message))
+      .then((res) => setArticle(res))
+      .catch((err) => setError(err.response?.data?.message || err.message))
       .finally(() => setLoading(false));
   }, [slug]);
 
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
-  if (!article) return <div className="p-6">Article not found.</div>;
+  if (loading) return <p className="text-on-surface-variant">Loading...</p>;
+  if (error) return <p className="text-error">{error}</p>;
+  if (!article) return <p className="text-on-surface-variant">Article not found.</p>;
 
   return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <NextLink
+        href="/dashboard/advocacy"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary"
+      >
+        <ArrowLeft size={18} /> Back
+      </NextLink>
 
-    <>
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
-
-      {/* Header with Back Arrow */}
-      <div className="flex items-center gap-4">
-        <NextLink
-          href="/dashboard/advocacy"
-          className="flex items-center gap-2 text-gray-700 hover:text-pink-600 transition-colors duration-200"
-        >
-          <ArrowLeft size={20} />
-          <span className="font-medium">Back</span>
-        </NextLink>
-      </div>
-
-    </div>
-
-    <div className="p-6 max-w-3xl mx-auto bg-white rounded shadow">
-        <h1 className="text-2xl font-bold text-pink-600">{article.title}</h1>
-        <p className="text-sm text-gray-500 mb-4">
+      <Card>
+        <h1 className="mb-2 text-3xl font-bold text-on-surface">{article.title}</h1>
+        <p className="mb-6 text-sm text-on-surface-variant">
           {article.author?.name ? `By ${article.author.name}` : ""}
         </p>
         {article.featuredImage?.url && (
-          <img src={article.featuredImage.url} alt={article.featuredImage.alt || ""} className="mb-4 rounded" />
+          <img
+            src={article.featuredImage.url}
+            alt={article.featuredImage.alt || ""}
+            className="mb-6 w-full rounded-2xl object-cover"
+          />
         )}
-        <div dangerouslySetInnerHTML={{ __html: article.content }} />
-      </div></>
+        <div
+          className="prose prose-sm sm:prose max-w-none"
+          dangerouslySetInnerHTML={{ __html: article.content }}
+        />
+      </Card>
+    </div>
   );
 }
 
 export default function PublicArticleViewPage() {
   return (
-    <Suspense fallback={<div className="p-6">Loading...</div>}>
+    <Suspense fallback={<p className="text-on-surface-variant">Loading...</p>}>
       <PublicArticleView />
     </Suspense>
   );
