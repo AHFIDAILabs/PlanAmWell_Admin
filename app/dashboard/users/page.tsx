@@ -114,7 +114,7 @@ export default function UsersPage() {
                   >
                     <Td>
                       <div className="flex items-center gap-3">
-                        <AvatarInitials name={u.name || "?"} />
+                        <AvatarInitials name={u.name || "?"} src={u.userImage?.url} />
                         <span className="font-semibold text-on-surface">{u.name || "No Name"}</span>
                       </div>
                     </Td>

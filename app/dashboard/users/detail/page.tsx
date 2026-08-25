@@ -64,7 +64,7 @@ function UserDetail() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
         <Card className="flex flex-col items-center text-center md:col-span-4">
-          <AvatarInitials name={user.name || "?"} className="mb-4 h-20 w-20 text-2xl" />
+          <AvatarInitials name={user.name || "?"} src={user.userImage?.url} className="mb-4 h-20 w-20 text-2xl" />
           <h1 className="text-2xl font-bold text-on-surface">{user.name || "No Name"}</h1>
           {user.status && (
             <Badge tone={user.status?.toLowerCase() === "active" ? "success" : "neutral"} className="mt-3">

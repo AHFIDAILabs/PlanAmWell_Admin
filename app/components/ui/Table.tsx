@@ -1,4 +1,6 @@
-import React, { FC, HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
+"use client";
+
+import React, { FC, HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes, useState } from "react";
 
 export const Table: FC<HTMLAttributes<HTMLTableElement>> = ({ className = "", children, ...props }) => (
   <div className="overflow-x-auto">
@@ -47,18 +49,28 @@ export const RowActions: FC<{ children: ReactNode }> = ({ children }) => (
   </div>
 );
 
-export const AvatarInitials: FC<{ name: string; className?: string }> = ({ name, className = "" }) => {
+export const AvatarInitials: FC<{ name: string; src?: string | null; className?: string }> = ({
+  name,
+  src,
+  className = "",
+}) => {
+  const [imgFailed, setImgFailed] = useState(false);
   const initials = name
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase())
     .join("");
+  const showImage = src && !imgFailed;
   return (
     <div
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-tertiary-container text-sm font-bold text-on-tertiary-container ${className}`}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-tertiary-container text-sm font-bold text-on-tertiary-container ${className}`}
     >
-      {initials || "?"}
+      {showImage ? (
+        <img src={src} alt={name} className="h-full w-full object-cover" onError={() => setImgFailed(true)} />
+      ) : (
+        initials || "?"
+      )}
     </div>
   );
 };

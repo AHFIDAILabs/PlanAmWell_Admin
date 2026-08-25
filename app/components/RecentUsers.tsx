@@ -41,6 +41,11 @@ function UserModal({ user, loading, error, onClose }: UserModalProps) {
         <div className="py-12 text-center font-semibold text-error">{error}</div>
       ) : (
         <div className="space-y-4">
+          <AvatarInitials
+            name={user.name || "?"}
+            src={user.userImage?.url}
+            className="mx-auto mb-2 h-20 w-20 text-2xl"
+          />
           {user.email && <DetailRow icon={<Mail size={18} />} label="Email" value={user.email} />}
           {user.phone && <DetailRow icon={<Phone size={18} />} label="Phone" value={user.phone} />}
           {user.username && <DetailRow icon={<AtSign size={18} />} label="Username" value={`@${user.username}`} />}
@@ -105,7 +110,7 @@ export default function RecentUsers() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <AvatarInitials name={user.name || "?"} />
+                <AvatarInitials name={user.name || "?"} src={user.userImage?.url} />
                 <div>
                   <p className="text-sm font-semibold text-on-surface">{user.name || "No Name"}</p>
                   <p className="text-xs text-on-surface-variant">{user.email || user.phone || "—"}</p>

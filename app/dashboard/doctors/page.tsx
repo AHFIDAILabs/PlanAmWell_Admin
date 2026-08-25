@@ -133,7 +133,7 @@ export default function DoctorsPage() {
                   >
                     <Td>
                       <div className="flex items-center gap-3">
-                        <AvatarInitials name={doctorName(d)} />
+                        <AvatarInitials name={doctorName(d)} src={d.doctorImage?.url || d.profileImage} />
                         <div>
                           <p className="font-semibold text-on-surface">{doctorName(d)}</p>
                           <p className="text-xs text-on-surface-variant">{d.email}</p>

@@ -110,7 +110,11 @@ function DoctorDetail() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <AvatarInitials name={doctor.fullName} className="h-16 w-16 text-lg" />
+          <AvatarInitials
+            name={doctor.fullName}
+            src={doctor.doctorImage?.url || doctor.profileImage}
+            className="h-16 w-16 text-lg"
+          />
           <div>
             <h1 className="text-2xl font-bold text-on-surface">{doctor.fullName}</h1>
             <Badge tone={STATUS_TONE[doctor.status] || "neutral"} className="mt-1">
