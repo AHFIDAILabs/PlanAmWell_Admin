@@ -24,7 +24,7 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
       </div>
       <div className="min-w-0 flex-1">
         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">{label}</p>
-        <p className="text-sm text-on-surface break-words">{value}</p>
+        <p className="text-sm text-on-surface wrap-break-words">{value}</p>
       </div>
     </div>
   );

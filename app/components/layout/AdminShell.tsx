@@ -17,6 +17,7 @@ import {
   UserCircle,
   Search,
   Settings,
+  CalendarHeart,
 } from "lucide-react";
 import ThemeToggle from "../theme/ThemeToggle";
 
@@ -48,6 +49,15 @@ const NAV: NavItem[] = [
   },
   { label: "Orders", href: "/dashboard/orders", icon: ShoppingBag },
   { label: "Partners", href: "/dashboard/partners", icon: Building2 },
+  {
+    label: "Community Hub",
+    href: "/dashboard/events",
+    icon: CalendarHeart,
+    children: [
+      { label: "All Events", href: "/dashboard/events" },
+      { label: "Create Event", href: "/dashboard/events/create" },
+    ],
+  },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 

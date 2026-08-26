@@ -257,6 +257,38 @@ export const updatePlatformSettingsService = async (consultationFeeKobo: number)
   return data?.data;
 };
 
+// ==================== COMMUNITY HUB EVENTS ====================
+export const getAllEventsAdminService = async () => {
+  const { data } = await adminApi.get("/events/admin/all");
+  return data?.data || [];
+};
+
+export interface EventPayload {
+  title: string;
+  description: string;
+  category?: string;
+  startsAt: string;
+  endsAt?: string;
+  location?: string;
+  isVirtual: boolean;
+  capacity?: number;
+}
+
+export const createEventService = async (payload: EventPayload) => {
+  const { data } = await adminApi.post("/events", payload);
+  return data?.data;
+};
+
+export const updateEventService = async (id: string, payload: Partial<EventPayload> & { isActive?: boolean }) => {
+  const { data } = await adminApi.put(`/events/${id}`, payload);
+  return data?.data;
+};
+
+export const deleteEventService = async (id: string) => {
+  const { data } = await adminApi.delete(`/events/${id}`);
+  return data;
+};
+
 // ==================== UTILITY FUNCTIONS ====================
 export const isAdminAuthenticated = (): boolean => !!localStorage.getItem("token");
 
