@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createEventService, EventPayload } from "../../../services/AdminService";
+import { createEventService, EventPayload, EventBannerPreset } from "../../../services/AdminService";
 import { Card } from "../../../components/ui/Card";
 import { Input } from "../../../components/ui/Input";
 import { Textarea } from "../../../components/ui/Textarea";
 import { Button } from "../../../components/ui/Button";
+import { EventBannerPicker } from "../../../components/events/EventBannerPicker";
 import { ArrowLeft } from "lucide-react";
 
 interface FormState {
@@ -34,12 +35,25 @@ const EMPTY_FORM: FormState = {
 export default function CreateEventPage() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [bannerPreset, setBannerPreset] = useState<EventBannerPreset | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  useEffect(() => {
+    if (!bannerFile) {
+      setBannerPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(bannerFile);
+    setBannerPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [bannerFile]);
 
   async function handleSubmit() {
     if (!form.title.trim() || !form.description.trim() || !form.startsAt) {
@@ -58,8 +72,9 @@ export default function CreateEventPage() {
         isVirtual: form.isVirtual,
         location: form.isVirtual ? undefined : form.location.trim() || undefined,
         capacity: form.capacity ? Number(form.capacity) : undefined,
+        bannerPreset: bannerFile ? undefined : bannerPreset || undefined,
       };
-      await createEventService(payload);
+      await createEventService(payload, bannerFile || undefined);
       router.push("/dashboard/events");
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || "Failed to create event");
@@ -87,6 +102,14 @@ export default function CreateEventPage() {
       )}
 
       <Card className="space-y-4">
+        <EventBannerPicker
+          existingImageUrl={null}
+          preset={bannerPreset}
+          filePreviewUrl={bannerPreview}
+          onFileSelected={setBannerFile}
+          onPresetSelected={setBannerPreset}
+        />
+
         <Input label="Title" placeholder="e.g. Teen SRHR Support Circle" value={form.title} onChange={(e) => set("title", e.target.value)} />
         <Textarea
           label="Description"

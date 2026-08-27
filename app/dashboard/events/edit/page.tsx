@@ -7,12 +7,14 @@ import {
   updateEventService,
   deleteEventService,
   EventPayload,
+  EventBannerPreset,
 } from "../../../services/AdminService";
 import { Card } from "../../../components/ui/Card";
 import { Input } from "../../../components/ui/Input";
 import { Textarea } from "../../../components/ui/Textarea";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
+import { EventBannerPicker } from "../../../components/events/EventBannerPicker";
 import { ArrowLeft, Trash2 } from "lucide-react";
 
 interface FormState {
@@ -42,6 +44,10 @@ function EditEvent() {
 
   const [form, setForm] = useState<FormState | null>(null);
   const [rsvpCount, setRsvpCount] = useState(0);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [bannerPreset, setBannerPreset] = useState<EventBannerPreset | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +71,8 @@ function EditEvent() {
             capacity: found.capacity ? String(found.capacity) : "",
           });
           setRsvpCount(found.rsvpCount || 0);
+          setExistingImageUrl(found.bannerImage?.url || null);
+          setBannerPreset(found.bannerPreset || null);
         } else {
           setError("Event not found.");
         }
@@ -72,8 +80,24 @@ function EditEvent() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    if (!bannerFile) {
+      setBannerPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(bannerFile);
+    setBannerPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [bannerFile]);
+
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+  }
+
+  function handlePresetSelected(p: EventBannerPreset | null) {
+    setBannerPreset(p);
+    // Picking a built-in graphic replaces any existing uploaded photo.
+    setExistingImageUrl(null);
   }
 
   async function handleSubmit() {
@@ -94,8 +118,9 @@ function EditEvent() {
         isVirtual: form.isVirtual,
         location: form.isVirtual ? undefined : form.location.trim() || undefined,
         capacity: form.capacity ? Number(form.capacity) : undefined,
+        bannerPreset: bannerFile ? undefined : bannerPreset || undefined,
       };
-      await updateEventService(id, payload);
+      await updateEventService(id, payload, bannerFile || undefined);
       router.push("/dashboard/events");
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || "Failed to update event");
@@ -151,6 +176,14 @@ function EditEvent() {
       )}
 
       <Card className="space-y-4">
+        <EventBannerPicker
+          existingImageUrl={existingImageUrl}
+          preset={bannerPreset}
+          filePreviewUrl={bannerPreview}
+          onFileSelected={setBannerFile}
+          onPresetSelected={handlePresetSelected}
+        />
+
         <Input label="Title" value={form.title} onChange={(e) => set("title", e.target.value)} />
         <Textarea label="Description" value={form.description} onChange={(e) => set("description", e.target.value)} rows={4} />
         <Input label="Category" value={form.category} onChange={(e) => set("category", e.target.value)} />

@@ -263,6 +263,8 @@ export const getAllEventsAdminService = async () => {
   return data?.data || [];
 };
 
+export type EventBannerPreset = "support-circle" | "workshop" | "qa-session" | "wellness" | "celebration";
+
 export interface EventPayload {
   title: string;
   description: string;
@@ -272,15 +274,40 @@ export interface EventPayload {
   location?: string;
   isVirtual: boolean;
   capacity?: number;
+  bannerPreset?: EventBannerPreset;
 }
 
-export const createEventService = async (payload: EventPayload) => {
-  const { data } = await adminApi.post("/events", payload);
+function eventPayloadToFormData(payload: Partial<EventPayload> & { isActive?: boolean; clearBanner?: boolean }): FormData {
+  const form = new FormData();
+  for (const [key, value] of Object.entries(payload)) {
+    if (value !== undefined && value !== null) form.append(key, String(value));
+  }
+  return form;
+}
+
+export const createEventService = async (payload: EventPayload, bannerFile?: File) => {
+  const form = eventPayloadToFormData(payload);
+  if (bannerFile) form.append("bannerImage", bannerFile);
+  const { data } = await adminApi.post("/events", form);
   return data?.data;
 };
 
-export const updateEventService = async (id: string, payload: Partial<EventPayload> & { isActive?: boolean }) => {
-  const { data } = await adminApi.put(`/events/${id}`, payload);
+export const updateEventService = async (
+  id: string,
+  payload: Partial<EventPayload> & { isActive?: boolean; clearBanner?: boolean },
+  bannerFile?: File
+) => {
+  // A plain isActive-only toggle (the list page's Activate/Deactivate
+  // action) never touches the banner — keep it a simple JSON PUT rather
+  // than round-tripping through FormData for no reason.
+  const keys = Object.keys(payload);
+  if (!bannerFile && keys.length === 1 && keys[0] === "isActive") {
+    const { data } = await adminApi.put(`/events/${id}`, payload);
+    return data?.data;
+  }
+  const form = eventPayloadToFormData(payload);
+  if (bannerFile) form.append("bannerImage", bannerFile);
+  const { data } = await adminApi.put(`/events/${id}`, form);
   return data?.data;
 };
 

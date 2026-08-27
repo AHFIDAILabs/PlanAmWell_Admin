@@ -12,6 +12,7 @@ import { Badge } from "../../components/ui/Badge";
 import { Modal } from "../../components/ui/Modal";
 import { Pagination } from "../../components/ui/Pagination";
 import { Table, Thead, Tbody, Tr, Th, Td, RowActions } from "../../components/ui/Table";
+import { EventBannerThumb } from "../../components/events/EventBannerPicker";
 
 const PAGE_SIZE = 10;
 
@@ -27,6 +28,8 @@ interface AdminEvent {
   capacity?: number;
   isActive: boolean;
   rsvpCount: number;
+  bannerImage?: { url: string } | null;
+  bannerPreset?: string | null;
 }
 
 type TimeFilter = "all" | "upcoming" | "past";
@@ -173,7 +176,12 @@ export default function EventsListPage() {
                   const isPast = new Date(e.startsAt).getTime() < Date.now();
                   return (
                     <Tr key={e._id}>
-                      <Td className="font-semibold text-on-surface">{e.title}</Td>
+                      <Td className="font-semibold text-on-surface">
+                        <div className="flex items-center gap-3">
+                          <EventBannerThumb imageUrl={e.bannerImage?.url} preset={e.bannerPreset as any} />
+                          {e.title}
+                        </div>
+                      </Td>
                       <Td>{e.category ? <Badge tone="info">{e.category}</Badge> : <span className="text-on-surface-variant">—</span>}</Td>
                       <Td className="text-on-surface-variant">
                         {new Date(e.startsAt).toLocaleString(undefined, {

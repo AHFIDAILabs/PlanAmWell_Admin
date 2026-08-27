@@ -105,7 +105,7 @@ export default function CreateArticlePage() {
             <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 cursor-pointer opacity-0" />
           </div>
         ) : (
-          <label className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-surface-variant bg-surface-container-low transition-colors hover:bg-surface-container">
+          <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-surface-variant bg-surface-container-low transition-colors hover:bg-surface-container">
             <Upload size={32} className="mb-2 text-outline" />
             <span className="font-semibold text-on-surface-variant">Upload Cover Image</span>
             <span className="mt-1 text-xs text-outline">1200 x 630px recommended</span>
