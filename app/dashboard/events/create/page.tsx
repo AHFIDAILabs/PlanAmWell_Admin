@@ -19,6 +19,10 @@ interface FormState {
   isVirtual: boolean;
   location: string;
   capacity: string;
+  organizerName: string;
+  registrationUrl: string;
+  isPaidPlacement: boolean;
+  ticketPriceNaira: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -30,6 +34,10 @@ const EMPTY_FORM: FormState = {
   isVirtual: true,
   location: "",
   capacity: "",
+  organizerName: "",
+  registrationUrl: "",
+  isPaidPlacement: false,
+  ticketPriceNaira: "",
 };
 
 export default function CreateEventPage() {
@@ -73,6 +81,11 @@ export default function CreateEventPage() {
         location: form.isVirtual ? undefined : form.location.trim() || undefined,
         capacity: form.capacity ? Number(form.capacity) : undefined,
         bannerPreset: bannerFile ? undefined : bannerPreset || undefined,
+        organizerName: form.organizerName.trim() || undefined,
+        registrationUrl: form.registrationUrl.trim() || undefined,
+        isPaidPlacement: form.isPaidPlacement,
+        // Naira in the UI (matches every other price field in this app), kobo on the wire.
+        ticketPriceKobo: form.ticketPriceNaira ? Math.round(Number(form.ticketPriceNaira) * 100) : undefined,
       };
       await createEventService(payload, bannerFile || undefined);
       router.push("/dashboard/events");
@@ -170,6 +183,54 @@ export default function CreateEventPage() {
           value={form.capacity}
           onChange={(e) => set("capacity", e.target.value)}
         />
+      </Card>
+
+      <Card className="space-y-4">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-on-surface-variant">Organizer &amp; Monetization</h2>
+
+        <Input
+          label="Organizer name (optional)"
+          placeholder="Who's actually running this event"
+          value={form.organizerName}
+          onChange={(e) => set("organizerName", e.target.value)}
+        />
+        <Input
+          label="Registration link (optional)"
+          placeholder="https://organizer-site.com/register"
+          value={form.registrationUrl}
+          onChange={(e) => set("registrationUrl", e.target.value)}
+        />
+        <p className="-mt-2 text-xs text-on-surface-variant">
+          Patients see a &quot;Register&quot; button that opens this in-app (mobile) or in a new tab (web) — we never
+          collect their details ourselves. A referral code is appended automatically so the organizer can attribute
+          signups back to PlanAmWell.
+        </p>
+
+        <Input
+          label="Ticket price in ₦ (optional — leave blank for a free event)"
+          type="number"
+          min={0}
+          step="0.01"
+          placeholder="0"
+          value={form.ticketPriceNaira}
+          onChange={(e) => set("ticketPriceNaira", e.target.value)}
+        />
+        <p className="-mt-2 text-xs text-on-surface-variant">
+          When set, RSVP becomes a paid ticket purchase — the RSVP only confirms once payment completes.
+        </p>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="isPaidPlacement"
+            checked={form.isPaidPlacement}
+            onChange={(e) => set("isPaidPlacement", e.target.checked)}
+            className="h-5 w-5 rounded border-outline text-primary focus:ring-primary"
+          />
+          <label htmlFor="isPaidPlacement" className="text-sm font-semibold text-on-surface">
+            Featured / paid placement (mark after an out-of-band arrangement with the organizer)
+          </label>
+        </div>
       </Card>
 
       <div className="flex justify-end gap-3">

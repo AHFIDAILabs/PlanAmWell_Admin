@@ -26,6 +26,10 @@ interface FormState {
   isVirtual: boolean;
   location: string;
   capacity: string;
+  organizerName: string;
+  registrationUrl: string;
+  isPaidPlacement: boolean;
+  ticketPriceNaira: string;
 }
 
 // datetime-local inputs need "YYYY-MM-DDTHH:mm" in the viewer's local time,
@@ -69,6 +73,10 @@ function EditEvent() {
             isVirtual: found.isVirtual,
             location: found.location || "",
             capacity: found.capacity ? String(found.capacity) : "",
+            organizerName: found.organizerName || "",
+            registrationUrl: found.registrationUrl || "",
+            isPaidPlacement: !!found.isPaidPlacement,
+            ticketPriceNaira: found.ticketPriceKobo ? String(found.ticketPriceKobo / 100) : "",
           });
           setRsvpCount(found.rsvpCount || 0);
           setExistingImageUrl(found.bannerImage?.url || null);
@@ -119,6 +127,10 @@ function EditEvent() {
         location: form.isVirtual ? undefined : form.location.trim() || undefined,
         capacity: form.capacity ? Number(form.capacity) : undefined,
         bannerPreset: bannerFile ? undefined : bannerPreset || undefined,
+        organizerName: form.organizerName.trim() || undefined,
+        registrationUrl: form.registrationUrl.trim() || undefined,
+        isPaidPlacement: form.isPaidPlacement,
+        ticketPriceKobo: form.ticketPriceNaira ? Math.round(Number(form.ticketPriceNaira) * 100) : undefined,
       };
       await updateEventService(id, payload, bannerFile || undefined);
       router.push("/dashboard/events");
@@ -216,6 +228,50 @@ function EditEvent() {
           value={form.capacity}
           onChange={(e) => set("capacity", e.target.value)}
         />
+      </Card>
+
+      <Card className="space-y-4">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-on-surface-variant">Organizer &amp; Monetization</h2>
+
+        <Input
+          label="Organizer name (optional)"
+          value={form.organizerName}
+          onChange={(e) => set("organizerName", e.target.value)}
+        />
+        <Input
+          label="Registration link (optional)"
+          placeholder="https://organizer-site.com/register"
+          value={form.registrationUrl}
+          onChange={(e) => set("registrationUrl", e.target.value)}
+        />
+
+        <Input
+          label="Ticket price in ₦ (optional — leave blank for a free event)"
+          type="number"
+          min={0}
+          step="0.01"
+          value={form.ticketPriceNaira}
+          onChange={(e) => set("ticketPriceNaira", e.target.value)}
+        />
+        {rsvpCount > 0 && (
+          <p className="-mt-2 text-xs text-error">
+            Changing the ticket price won&apos;t affect the {rsvpCount} RSVP{rsvpCount === 1 ? "" : "s"} already paid
+            — only new registrations pay the new price.
+          </p>
+        )}
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="isPaidPlacement"
+            checked={form.isPaidPlacement}
+            onChange={(e) => set("isPaidPlacement", e.target.checked)}
+            className="h-5 w-5 rounded border-outline text-primary focus:ring-primary"
+          />
+          <label htmlFor="isPaidPlacement" className="text-sm font-semibold text-on-surface">
+            Featured / paid placement
+          </label>
+        </div>
       </Card>
 
       <div className="flex justify-end gap-3">

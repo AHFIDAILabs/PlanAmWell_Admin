@@ -30,6 +30,9 @@ interface AdminEvent {
   rsvpCount: number;
   bannerImage?: { url: string } | null;
   bannerPreset?: string | null;
+  organizerName?: string;
+  isPaidPlacement?: boolean;
+  ticketPriceKobo?: number;
 }
 
 type TimeFilter = "all" | "upcoming" | "past";
@@ -179,7 +182,17 @@ export default function EventsListPage() {
                       <Td className="font-semibold text-on-surface">
                         <div className="flex items-center gap-3">
                           <EventBannerThumb imageUrl={e.bannerImage?.url} preset={e.bannerPreset as any} />
-                          {e.title}
+                          <div>
+                            <div className="flex items-center gap-2">
+                              {e.title}
+                              {e.isPaidPlacement && <Badge tone="warning">Featured</Badge>}
+                            </div>
+                            {!!e.ticketPriceKobo && (
+                              <p className="mt-0.5 text-xs font-normal text-on-surface-variant">
+                                ₦{(e.ticketPriceKobo / 100).toLocaleString()} ticket
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </Td>
                       <Td>{e.category ? <Badge tone="info">{e.category}</Badge> : <span className="text-on-surface-variant">—</span>}</Td>

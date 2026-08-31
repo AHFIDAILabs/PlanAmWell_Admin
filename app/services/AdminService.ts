@@ -275,6 +275,10 @@ export interface EventPayload {
   isVirtual: boolean;
   capacity?: number;
   bannerPreset?: EventBannerPreset;
+  organizerName?: string;
+  registrationUrl?: string;
+  isPaidPlacement?: boolean;
+  ticketPriceKobo?: number;
 }
 
 function eventPayloadToFormData(payload: Partial<EventPayload> & { isActive?: boolean; clearBanner?: boolean }): FormData {
