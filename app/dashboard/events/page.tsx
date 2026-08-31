@@ -162,14 +162,20 @@ export default function EventsListPage() {
           <p className="p-6 text-on-surface-variant">No events found.</p>
         ) : (
           <>
+            {/* Category/Going are hidden below their breakpoints (not just
+                scrollable) so the table actually fits typical laptop widths
+                without a horizontal scrollbar — Event/Date & Location/Status/
+                Actions are the four columns that matter at any width. The
+                Table component's own overflow-x-auto wrapper stays as a
+                fallback for anything narrower still, it just shouldn't be
+                the normal case anymore. */}
             <Table>
               <Thead>
                 <Tr>
                   <Th>Event</Th>
-                  <Th>Category</Th>
-                  <Th>When</Th>
-                  <Th>Where</Th>
-                  <Th>Going</Th>
+                  <Th className="hidden md:table-cell">Category</Th>
+                  <Th>Date &amp; Location</Th>
+                  <Th className="hidden lg:table-cell">Going</Th>
                   <Th>Status</Th>
                   <Th className="text-right">Actions</Th>
                 </Tr>
@@ -195,17 +201,21 @@ export default function EventsListPage() {
                           </div>
                         </div>
                       </Td>
-                      <Td>{e.category ? <Badge tone="info">{e.category}</Badge> : <span className="text-on-surface-variant">—</span>}</Td>
-                      <Td className="text-on-surface-variant">
-                        {new Date(e.startsAt).toLocaleString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
+                      <Td className="hidden md:table-cell">
+                        {e.category ? <Badge tone="info">{e.category}</Badge> : <span className="text-on-surface-variant">—</span>}
                       </Td>
-                      <Td className="text-on-surface-variant">{e.isVirtual ? "Online" : e.location || "In person"}</Td>
                       <Td className="text-on-surface-variant">
+                        <div>
+                          {new Date(e.startsAt).toLocaleString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                        <div className="text-xs">{e.isVirtual ? "Online" : e.location || "In person"}</div>
+                      </Td>
+                      <Td className="hidden text-on-surface-variant lg:table-cell">
                         <span className="inline-flex items-center gap-1.5">
                           <Users size={14} />
                           {e.rsvpCount}
@@ -213,10 +223,11 @@ export default function EventsListPage() {
                         </span>
                       </Td>
                       <Td>
-                        <div className="flex flex-col gap-1">
+                        {isPast ? (
+                          <Badge tone="neutral">Past</Badge>
+                        ) : (
                           <Badge tone={e.isActive ? "success" : "neutral"}>{e.isActive ? "Active" : "Deactivated"}</Badge>
-                          {isPast && <Badge tone="neutral">Past</Badge>}
-                        </div>
+                        )}
                       </Td>
                       <Td>
                         <RowActions>
